@@ -1,0 +1,7 @@
+ui/node_modules/
+llm/.env
+llm/db/*
+llm/data/*
+llm/stage_data/*
+llm/rag-env
+llm/__pycache__
