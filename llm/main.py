@@ -19,16 +19,20 @@ class Prompt(BaseModel):
 
 @app.post("/qa")
 async def read_question(item: Prompt):
-    print("QUESTION::::::")
+    # print("QUESTION::::::")
     query = json.dumps(item.query)
     # query = item.query
-    print(query)
+    # print(query)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
-    for source in llm_response["source_documents"]:
-        sources.append(source)
-        print(source.metadata['source'])    
+    try:
+        for source in llm_response["source_documents"]:
+            sources.append(source)
+            # print(source.metadata['source'])   
+    except:
+        pass
+ 
     return {
         "answer": process_llm_response(llm_response),
         "sources": sources
@@ -56,3 +60,5 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
+
+# provide a mock case study for a renal cancer patient, and provide a personalized treatment plan with timelines and dosages.

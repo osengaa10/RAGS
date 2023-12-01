@@ -5,3 +5,4 @@ llm/data/*
 llm/stage_data/*
 llm/rag-env
 llm/__pycache__
+scratch*

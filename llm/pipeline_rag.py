@@ -82,7 +82,7 @@ class TogetherLLM(LLM):
 
 chunk_size = 1000
 chunk_overlap=200
-loader = DirectoryLoader('/home/austin/code/ai/RAGS/stage_data', glob="./*.pdf", loader_cls=PyPDFLoader)
+loader = DirectoryLoader('/home/austin/code/ai/RAGS/llm/stage_data', glob="./*.pdf", loader_cls=PyPDFLoader)
 documents = loader.load()
 print(f' number of documents {len(documents)}')
 #splitting the text into
@@ -119,7 +119,8 @@ vectordb = Chroma.from_documents(documents=texts,
 
 t2 = time.perf_counter()
 print(f'time taken to embed {len(texts)} chunks:',t2-t1)
-
+print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
+print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
 
 
 ##############################################################
@@ -129,8 +130,8 @@ def list_files(directory):
     """Return a list of filenames in the given directory."""
     return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 
-src_dir = '/home/austin/code/ai/RAGS/stage_data'
-dst_dir = '/home/austin/code/ai/RAGS/data'
+src_dir = '/home/austin/code/ai/RAGS/llm/stage_data'
+dst_dir = '/home/austin/code/ai/RAGS/llm/data'
 
 # List files in both directories before moving
 
@@ -153,7 +154,7 @@ print(f"Files moved: {files}")
 print("\n".join(list_files(src_dir)))
 
 # retriever = vectordb.as_retriever(search_kwargs={"k": 5})
-retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
+retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 6})
 
 ## Default LLaMA-2 prompt style
 B_INST, E_INST = "[INST]", "[/INST]"
@@ -225,6 +226,6 @@ def process_llm_response(llm_response):
         print(source.metadata['source'])
 
 
-query = "Provide a realistic mock Genetic profile of a cancer patient? This genetic profile should include all necessary genetic nformation to develop a personalized treatment plan for the patient."
+query = "provide a mock case study for a bladder cancer patient who also has CKD, and provide a personalized treatment plan with timelines and dosages?"
 llm_response = qa_chain(query)
 process_llm_response(llm_response)

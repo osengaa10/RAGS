@@ -1,0 +1,78 @@
+Q1:
+A 65-year-old woman is found to have microscopic hematuria on a urinalysis done for a work physical. 
+A follow-up cystoscopy shows a low-grade Ta bladder tumor. 
+What is the appropriate treatment?
+
+A1:
+TURBT followed by intravesical mitomycin. Although it is a low-grade
+tumor, it still requires resection. However, a single dose of intravesical
+chemotherapy should be sufficient to reduce recurrence.
+
+================================================================
+
+Q2:
+A 65-year-old woman is diagnosed with metastatic bladder cancer. She has
+a history of hypertension and chronic kidney disease with baseline creatinine of 2. Programmed death-ligand 1 (PD-L1) score is <1% and she has a
+FGFR2 mutation on next-generation sequencing.
+What is the appropriate first-line treatment?
+
+A2:
+Carboplatin + gemcitabine. Due to her chronic kidney disease (CKD),
+she would be considered cisplatin-ineligible. Platinum-based treatment
+would be still be preferable, and therefore carboplatin plus gemcitabine
+is the preferred regimen. PD-L1 score is too low for upfront checkpoint
+inhibitor therapy. Given the FGFR2 mutation, erdafitinib could be considered second-line but would not be used for front-line therapy.
+
+================================================================
+
+Q3:
+A 54-year-old man presents with gross hematuria. He undergoes transurethral
+resection of bladder tumor (TURBT), which diagnoses muscle-invasive (T2) bladder cancer. He has no comorbidities; however, he strongly prefers to not have a
+urostomy. What would be the optimal management of his bladder cancer?
+
+A3:
+Chemoradiation with cisplatin and 5-FU. Recommended options
+for muscle-invasive bladder cancer include cystectomy and chemoradiation. Because this patient prefers to avoid cystectomy, bladder-sparing
+options should be considered. Chemoradiation with doublet chemotherapy is preferred
+
+================================================================
+
+Q4:
+A 84-year-old man is diagnosed with metastatic bladder cancer. He is initially
+treated with gemcitabine and carboplatin due to a history of diabetic neuropathy. He has no other comorbidities and excellent functional status. After six
+cycles of treatment, imaging demonstrates a partial response to treatment. What management would be recommended next?
+
+A4:
+Avelumab maintenance. Per the Javelin 100 study, maintenance immunotherapy with avelumab was shown to prolong overall survival following
+four to six cycles of platinum-based chemotherapy if disease has not progressed. Avelumab maintenance was shown to be superior to best supportive care in the overall and PD-L1 positive populations, so PD-L1 testing
+is not necessary prior to starting avelumab.
+
+================================================================
+Maybe not be a good question...
+Q5:
+. A 69-year-old man is treated for localized T1 bladder cancer with bacillus Calmette–Guérin (BCG). On repeat transurethral resection of bladder
+tumor (TURBT), he appears to have residual disease. Pathology is consistent with urothelial carcinoma without invasion of muscularis propria
+(muscularis propria is present on the specimen, however). What treatment would not be considered for his BCG-refractory bladder
+cancer?
+
+A5:
+Cisplatin. Options for management of T1 bladder cancer refractory to
+BCG include intravesicular chemotherapy, pembrolizumab, or cystectomy.
+Systemic cisplatin-based chemotherapy regimens are not used in this
+setting
+
+================================================================
+
+Q6:
+A 62-year-old man develops hematuria and is referred to a urologist.
+Staging cystoscopy reveals a sessile bladder tumor. Pathology from the
+transurethral resection shows high-grade urothelial carcinoma invading the
+lamina propria but no muscle is included in the sample and is staged as T1.
+Which therapy would you recommend?
+
+A6:
+Repeat staging with TURBT. There was no muscle included in the
+sample and treatment depends on whether invasion into the muscularis
+propria is present or not.
+
+
