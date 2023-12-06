@@ -10,7 +10,7 @@ from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
+from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory
 from langchain.chains.conversation.memory import ConversationKGMemory
 
 # set your API key
@@ -96,8 +96,22 @@ If you don't know the answer to a question, please don't share false information
 """
 
 instruction = """CONTEXT:/n/n {context}/n
-
+{chat_history}
 Question: {question}"""
+
+
+# template = """You have 30 years experience as both a practicing oncologist and professor of medicine.
+# Always anwser the question as helpfully as possible, or provide a treatment regimen as detailed as possible using the context text provided. 
+# The treatment regimen should specify dosages, timelines and enough information for your nurses to begin treatment. 
+# If you don't know the answer to a question, please don't share false information.
+
+# CONTEXT:/n/n {context} /n
+
+# Question: {question} /n
+
+# {chat_history}
+
+# """
 
 
 
@@ -117,15 +131,15 @@ llm = TogetherLLM(
 )
 
 prompt_template = get_prompt(instruction, DEFAULT_SYSTEM_PROMPT)
-
+print("prompt_template::: " + str(prompt_template))
 llama_prompt = PromptTemplate(
     template=prompt_template, input_variables=["context", "question", "chat_history"]
 )
 
 
-chain_type_kwargs = {"prompt": llama_prompt}
+chain_type_kwargs = {"prompt": llama_prompt, "memory": ConversationBufferWindowMemory(k=2, memory_key="chat_history", input_key='question',return_messages=True)}
 
-memory = ConversationBufferMemory(memory_key="chat_history", input_key='query', output_key='result', return_messages=True)
+# memory = ConversationBufferMemory(memory_key="chat_history", input_key='query', output_key='result', return_messages=True)
 
 
 # create the chain to answer questions
@@ -135,7 +149,8 @@ qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type_kwargs=chain_type_kwargs,
                                        return_source_documents=True,
                                        verbose=True,
-                                       memory=memory)
+                                    #    memory=memory
+                                       )
 
 ## Cite sources
 def wrap_text_preserve_newlines(text, width=110):
@@ -151,7 +166,7 @@ def process_llm_response(llm_response):
     # print("llm_response")
     # print(llm_response)
     # print("MEMORY BUFFER")
-    # print(qa_chain.memory.buffer)
+    print(qa_chain.memory)
     return llm_response['result']
 
 # query = "A 65-year-old woman is diagnosed with metastatic bladder cancer. She has a history of hypertension and chronic kidney disease with baseline creatinine of 2. Programmed death-ligand 1 (PD-L1) score is <1% and she has a FGFR2 mutation on next-generation sequencing. What is the appropriate first-line treatment?"
