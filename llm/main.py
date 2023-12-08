@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, UploadFile, File
 from rag import qa_chain, process_llm_response, wrap_text_preserve_newlines
+from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -37,6 +38,13 @@ async def read_question(item: Prompt):
         "answer": process_llm_response(llm_response),
         "sources": sources
     }
+
+
+@app.post("/chunk_and_embed")
+async def upload_to_vector_db(file: UploadFile = File(...)):
+    return {"filename": file.filename}
+
+
 
 
 @app.get("/test") 
