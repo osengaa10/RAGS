@@ -8,9 +8,8 @@ import {
     Box,
     AccordionIcon,
     Spinner,
-    keyframes,
+    Select,
     Button, Textarea, Text, Divider,
-    IconButton,
   } from '@chakra-ui/react'
 
   function PromptAndResponse(){
@@ -19,21 +18,34 @@ import {
     const [sources, setSources] = useState([])
     const [loading, setLoading] = useState(null)
     const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
+    const [vectorDBList, setVectorDBList] = useState([])
+    const [vectorDB, setVectorDB] = useState('db')
 
-    const handleChange = (e) => {
+    useEffect(() => {
+      axios.get(`http://localhost:8000/databases`)
+        .then((response) =>{
+          console.log("response:: ", response.data)
+          setVectorDBList(response.data)
+        })
+    },[])
+
+    const handlePromptChange = (e) => {
         const value = e.target.value;
         setPrompt(value)
     }
 
+    const selectVectorDB = (e) => {
+      const value = e.target.value;
+      setVectorDB(value)
+      console.log("vectorDB::: ", vectorDB)
+  }
+
     const handleClick = (e) => {
         e.preventDefault();
-        console.log("prompt to API:: ", {query: prompt})
         setLoading('loading...')
         setGradients('linear(to-r, green.200, pink.500)')
-        axios.post(`http://localhost:8000/qa`, {query: prompt})
+        axios.post(`http://localhost:8000/qa`, {query: prompt, input_directory: vectorDB})
           .then((response) => {
-            console.log("prompt sent to api: ", prompt)
-            console.log("response:: ", response)
             setAnswer(response.data.answer)
             setLoading(null)
             setSources(response.data.sources)
@@ -46,7 +58,14 @@ import {
 
     return(
         <>
-        <Textarea m='10px' placeholder='ask a question' onChange={handleChange} />
+        <Select placeholder='Select RAG' onChange={selectVectorDB}>
+        { 
+          vectorDBList.map((vectorDB) =>
+          <option value={vectorDB}>{vectorDB}</option>
+          )
+        }
+        </Select>
+        <Textarea m='10px' placeholder='ask a question' onChange={handlePromptChange} />
         <Button m="10px" colorScheme='blue' onClick={handleClick}
            _hover={{
             bgGradient: 'linear(to-r, red.500, yellow.500)',

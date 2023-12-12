@@ -48,7 +48,6 @@ def chunk_and_embed(input_directory):
     print(f'time taken to embed {len(texts)} chunks:',t2-t1)
     print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
     print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
-    # return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
 
     src_dir = './stage_data'
     dst_dir = f'./data/{input_directory}'

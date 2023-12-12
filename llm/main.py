@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from rag import *
 from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
@@ -22,23 +22,18 @@ app.add_middleware(
 )
 class Prompt(BaseModel):
     query: str
+    input_directory: str
 
 @app.post("/qa")
 async def read_question(item: Prompt):
-    # print("QUESTION::::::")
     query = json.dumps(item.query)
-    # query = item.query
-    # print(query)
-    qa_chain = create_chain('db')
+    qa_chain = create_chain(item.input_directory)
     llm_response = qa_chain(query)
-    # print("LLM RESPONSE:::")
-    # print(llm_response)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
     try:
         for source in llm_response["source_documents"]:
             sources.append(source)
-            # print(source.metadata['source'])   
     except:
         print("NO SOURCES??")
         pass
@@ -50,7 +45,7 @@ async def read_question(item: Prompt):
 
 
 @app.post("/chunk_and_embed")
-async def upload_to_vector_db(files: List[UploadFile] = File(...)):
+async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...)):
     for file in files:
         try:
             with open(file.filename, 'wb') as f:
@@ -61,18 +56,17 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...)):
         finally:
             file.file.close()
 
-    chunk_and_embed('dietetics')
-    qa_chain = create_chain('dietetics')
-    query = "what is an ideal diet for a patient with CHF?"
+    print(f"RAG NAME::: {input_directory}")
+    chunk_and_embed(input_directory)
+    qa_chain = create_chain(input_directory)
+    query = "what are some ways of transfering graphene?"
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
-    # return {"message": f"Successfuly uploaded {[file.filename for file in files]}"} 
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
     try:
         for source in llm_response["source_documents"]:
             sources.append(source)
-            # print(source.metadata['source'])   
     except:
         print("NO SOURCES??")
         pass

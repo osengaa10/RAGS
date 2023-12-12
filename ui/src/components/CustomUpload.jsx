@@ -2,32 +2,15 @@ import { useState, useEffect } from 'react'
 import './CustomUpload.css'
 import axios from 'axios'
 import {
-  AccordionPanel,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
   Box,
-  AccordionIcon,
-  Spinner,
+  Input,
   keyframes,
-  Button, Textarea, Text, Divider,
-  IconButton,
+  Button,
 } from '@chakra-ui/react'
-  import { 
-    HamburgerIcon,
-    EmailIcon,
-    AddIcon,
-    RepeatIcon,
-    ChevronDownIcon,
-    EditIcon } from '@chakra-ui/icons'
 import PromptAndResponse from './PrompAndResponse'
 
 function CustomUpload() {
-  const [prompt, setPrompt] = useState('')
-  const [answer, setAnswer] = useState(null)
-  const [sources, setSources] = useState([])
-  const [loading, setLoading] = useState(null)
-  const [error, setError] = useState(null)
+  const [ragName, setRagName] = useState('')
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploaded, setUploaded] = useState(false)
   const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
@@ -43,20 +26,23 @@ function CustomUpload() {
     setSelectedFiles([...selectedFiles, ...files]);
   };
 
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setRagName(value)
+  }
   const handleUpload = () => {
-    if (selectedFiles.length === 0) {
-      alert('Please select one or more files');
+    if (selectedFiles.length === 0 || ragName === '') {
+      alert('Select one or more files and name your RAG');
       return;
     }
-
     const formData = new FormData();
-    selectedFiles.forEach((file, index) => {
+        selectedFiles.forEach((file, index) => {
       formData.append(`files`, file);
     });
+    formData.append(`input_directory`, ragName)
     axios.post('http://localhost:8000/chunk_and_embed', formData)
     .then(response => {
       // Handle the response from the server
-      console.log('File uploaded successfully:', response.data);
       setUploaded(true)
     })
     .catch(error => {
@@ -64,6 +50,7 @@ function CustomUpload() {
       console.error('Error uploading file:', error);
     });
   }
+
 
   return (
     <Box
@@ -81,17 +68,19 @@ function CustomUpload() {
       >
         Custom File Q&A
       </Text> 
+      
       { uploaded ?
       <>
        <PromptAndResponse />  
       </>
       :
       <div>
-      <input type="file" accept=".pdf" onChange={handleFileChange} multiple/>
-      <Button m="10px" colorScheme='blue' onClick={handleUpload}
-         _hover={{
-          bgGradient: 'linear(to-r, red.500, yellow.500)',
-        }}>Upload</Button>
+        <input style={{padding: '20px'}} type="file" accept=".pdf" onChange={handleFileChange} multiple/>
+        <Input p="20px" placeholder='RAG Name' size='lg' onChange={handleChange} />
+        <Button m="20px" colorScheme='blue' onClick={handleUpload}
+          _hover={{
+            bgGradient: 'linear(to-r, red.500, yellow.500)',
+          }}>Submit</Button>
     </div>
       }
  
