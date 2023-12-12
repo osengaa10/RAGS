@@ -51,7 +51,7 @@ function CustomUpload() {
 
     const formData = new FormData();
     selectedFiles.forEach((file, index) => {
-      formData.append(`file`, file);
+      formData.append(`files`, file);
     });
     axios.post('http://localhost:8000/chunk_and_embed', formData)
     .then(response => {
