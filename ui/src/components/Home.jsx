@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react'
 import '../App.css'
-import axios from 'axios'
 import {
-  AccordionPanel,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
   Box,
-  AccordionIcon,
-  Spinner,
   keyframes,
-  Button, Textarea, Text, Divider
+  Text
 } from '@chakra-ui/react'
-import NavBar from './NavBar';
 import PromptAndResponse from './PrompAndResponse';
 
 function Home() {
@@ -33,7 +25,6 @@ function Home() {
       bgGradient={gradients}
       animation= {`${animation} 1s linear infinite`}
     >
-      {/* <NavBar /> */}
     <div style={{padding: '50px'}}>
        <Text
         bgColor='black'

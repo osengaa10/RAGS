@@ -1,4 +1,4 @@
-import { HomeTwoTone, EditTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
+import { HomeTwoTone, CloudUploadOutlined, SettingOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
@@ -15,11 +15,11 @@ const Header = () => {
             <Menu.Item key="h" icon= {<HomeTwoTone />}>
                 <Link to="/">Home</Link>
             </Menu.Item>
-            <Menu.Item key="r" icon= {<EditTwoTone />} style={{ marginLeft: 'auto' }}>
+            <Menu.Item key="r" icon= {<CloudUploadOutlined />} style={{ marginLeft: 'auto' }}>
                 <Link to="/custom">Custom Upload</Link>
             </Menu.Item>
-            <Menu.Item key="l" icon= {<CheckCircleTwoTone />} >
-                <Link to="/login">Login</Link>
+            <Menu.Item key="l" icon= {<SettingOutlined />} >
+                <Link to="/">RAG & LLM Configs</Link>
             </Menu.Item>
         </Menu>
         <Outlet />

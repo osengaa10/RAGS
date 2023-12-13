@@ -59,8 +59,25 @@ memory = ConversationBufferMemory(memory_key="chat_history", input_key='query', 
 def create_chain(input_directory):
     """create the chain to answer questions"""
 
-    persist_directory = f'custom_db/{input_directory}'
+    PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing {input_directory}.
+    Always anwser the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. 
+    The treatment regimen should specify dosages, timelines and enough information colleagues to begin treatment. 
+    If you don't know the answer to a question, please don't share false information.
+    
+    """
 
+    instruction = """CONTEXT:/n/n {context}/n
+
+    Question: {question}"""
+
+    SYSTEM_PROMPT = B_SYS + PARAMETERIZED_SYSTEM_PROMPT + E_SYS
+    prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
+    print(f"prompt_template::: {prompt_template}")
+    llama_prompt = PromptTemplate(
+        template=prompt_template, input_variables=["context", "question", "chat_history"]
+    )
+    persist_directory = f'custom_db/{input_directory}'
+    chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
     retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 5})
     return RetrievalQA.from_chain_type(llm=configs.llm,
