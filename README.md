@@ -6,7 +6,7 @@ A retrieval augmented generation system (RAGS) via langchain RecursiveCharacterT
 ![prompt QA](./paste-screenshot.png)
 
 ### Get started:
-_Get an API key from together.ai, and thenopen one terminal for the frontend, and another for the backend_
+_Get an API key from together.ai, and then open one terminal for the frontend, and another for the backend_
 #### run backend:
 1. `cd RAGS/llm`
 2. `python -m venv rag-env`
