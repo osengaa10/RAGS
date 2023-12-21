@@ -90,7 +90,7 @@ import {
       {!loading ? sources.map(sauce => 
       <>
       <Divider orientation='horizontal' />
-    <Accordion defaultIndex={[1]} allowMultiple>
+    <Accordion defaultIndex={[0]} allowMultiple>
     <AccordionItem>
       <h2>
         <AccordionButton>

@@ -80,10 +80,9 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
 
 
 @app.get("/databases") 
-def fetch_vector_databases():
-    filenames = os.listdir ("./custom_db")
-    print(f"custom vector stores::: {filenames}")
-    return filenames
+async def fetch_vector_databases():
+    filenames = os.listdir("./custom_db")
+    return sorted(filenames)
     
 
 

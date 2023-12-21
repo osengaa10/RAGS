@@ -56,12 +56,25 @@ chain_type_kwargs = {"prompt": llama_prompt}
 memory = ConversationBufferMemory(memory_key="chat_history", input_key='query', output_key='result', return_messages=True)
 
 
+def extract_up_to_number(s):
+    for i, char in enumerate(s):
+        if char.isdigit():
+            return s[:i]
+    return s  # Return the entire string if no number is found
+
+
+
 def create_chain(input_directory):
     """create the chain to answer questions"""
+    prompt_specialist = input_directory
+    if input_directory == 'db':
+        prompt_specialist = 'oncology'
 
-    PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing {input_directory}.
+    prompt_specialist = extract_up_to_number(input_directory)
+
+    PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing {prompt_specialist}.
     Always anwser the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. 
-    The treatment regimen should specify dosages, timelines and enough information colleagues to begin treatment. 
+    The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. 
     If you don't know the answer to a question, please don't share false information.
     
     """
@@ -79,7 +92,7 @@ def create_chain(input_directory):
     persist_directory = f'custom_db/{input_directory}'
     chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
-    retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 5})
+    retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
     return RetrievalQA.from_chain_type(llm=configs.llm,
                                         chain_type="stuff",
                                         retriever=retriever,

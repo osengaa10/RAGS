@@ -58,8 +58,17 @@ class TogetherLLM(LLM):
         return text
 
 
-# Instantiate embeddings model
-model_name = "BAAI/bge-base-en"
+# # Instantiate embeddings model
+# model_name = "BAAI/bge-base-en"
+# encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine similarity
+# model_norm = HuggingFaceBgeEmbeddings(
+#     model_name=model_name,
+#     model_kwargs={'device': 'cpu'},
+#     encode_kwargs=encode_kwargs
+# )
+
+
+model_name = "BAAI/bge-large-en"
 encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine similarity
 model_norm = HuggingFaceBgeEmbeddings(
     model_name=model_name,
@@ -70,7 +79,7 @@ model_norm = HuggingFaceBgeEmbeddings(
 embedding = model_norm
 
 llm = TogetherLLM(
-    model= "togethercomputer/llama-2-70b-chat",
+    model= "mistralai/Mixtral-8x7B-Instruct-v0.1",
     temperature = 0.1,
-    max_tokens = 2024,
+    max_tokens = 4000,
 )
