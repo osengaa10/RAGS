@@ -56,12 +56,11 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
         finally:
             file.file.close()
 
-    print(f"RAG NAME::: {input_directory}")
+    # print(f"RAG NAME::: {input_directory}")
     chunk_and_embed(input_directory)
     qa_chain = create_chain(input_directory)
     query = "what are some ways of transfering graphene?"
     llm_response = qa_chain(query)
-    wrap_text_preserve_newlines(llm_response['result'])
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
     try:
@@ -84,6 +83,46 @@ async def fetch_vector_databases():
     filenames = os.listdir("./custom_db")
     return sorted(filenames)
     
+
+
+
+@app.get("/benchmark")
+async def benchmarking():
+    vector_db_list = ["oncology2-bge-large-c1000-o200", "oncology3-bge-large-c500-o100","oncology4-bge-large-c2000-o400"]
+    with open("../benchmarking/prompts-and-answers.json", 'r') as file:
+        data = json.load(file)
+        questions = [item['q'] for item in data]
+    llm_response_list = []
+    qa_chain = create_chain("oncology2-bge-large-c1000-o200")
+    for question in questions:
+        query = json.dumps(question)
+        llm_response = qa_chain(query)
+        wrap_text_preserve_newlines(llm_response['result'])
+        sources = []
+        try:
+            for source in llm_response["source_documents"]:
+                sources.append(source.page_content)
+        except:
+            print("NO SOURCES??")
+            pass
+ 
+        llm_response_list.append({
+        "answer": process_llm_response(llm_response),
+        "sources": sources
+        })
+        
+    with open('../benchmarking/oncology2-bge-large-c1000-o200-benchmark.json', 'w+') as file:
+        try:
+            json.dump(llm_response_list, file, indent=4)
+            print("json.dump")
+        except:
+            file.write(llm_response_list)
+            print("file.write")
+    return "answers made"
+
+
+
+
 
 
 if __name__ == "__main__":

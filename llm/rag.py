@@ -85,7 +85,6 @@ def create_chain(input_directory):
 
     SYSTEM_PROMPT = B_SYS + PARAMETERIZED_SYSTEM_PROMPT + E_SYS
     prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
-    print(f"prompt_template::: {prompt_template}")
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )
