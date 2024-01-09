@@ -2,6 +2,7 @@ import os
 import together
 import textwrap
 from typing import Any, Dict
+import json
 from pydantic import Extra
 from langchain.llms.base import LLM
 from langchain.utils import get_from_dict_or_env
@@ -102,6 +103,45 @@ def create_chain(input_directory):
 
 
 
+def create_evaluation_chain(input_directory='none'):
+    """create the chain to answer questions"""
+    prompt_specialist = input_directory
+    if input_directory == 'db':
+        prompt_specialist = 'oncology'
+
+    prompt_specialist = extract_up_to_number(input_directory)
+
+    EVALUATION_SYSTEM_PROMPT = f"""You have 30 years experience practicing oncology.
+    Your job is to compare a correct Control Treatment plan to either multiple following treatments or supporting text.
+    The "Control Treatment" will always come first, followed by TREATMENT 1:, TREATMENT 2:, TREATMENT 3:, etc.
+    You need to identify which of the treatments is the most like the "Control Treatment".
+    If you don't know the answer to a question, please don't share false information.
+    
+    """
+
+    instruction = """CONTEXT:/n/n {context}/n
+
+    Question: {question}"""
+
+    SYSTEM_PROMPT = B_SYS + EVALUATION_SYSTEM_PROMPT + E_SYS
+    prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
+    llama_prompt = PromptTemplate(
+        template=prompt_template, input_variables=["context", "question", "chat_history"]
+    )
+    persist_directory = f'custom_db/{input_directory}'
+    chain_type_kwargs = {"prompt": llama_prompt}
+    vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
+    retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
+    return RetrievalQA.from_chain_type(llm=configs.llm,
+                                        chain_type="stuff",
+                                        retriever=retriever,
+                                        chain_type_kwargs=chain_type_kwargs,
+                                        return_source_documents=True,
+                                        verbose=True,
+                                        memory=memory)
+
+
+
 ## Cite sources
 def wrap_text_preserve_newlines(text, width=110):
     # Split the input text into lines based on newline characters
@@ -118,3 +158,7 @@ def process_llm_response(llm_response):
 query = "A 65-year-old woman is diagnosed with metastatic bladder cancer. She has a history of hypertension and chronic kidney disease with baseline creatinine of 2. Programmed death-ligand 1 (PD-L1) score is <1% and she has a FGFR2 mutation on next-generation sequencing. What is the appropriate first-line treatment?"
 
 # A 65-year-old woman is diagnosed with metastatic bladder cancer. She has a history of hypertension and chronic kidney disease with baseline creatinine of 2. Programmed death-ligand 1 (PD-L1) score is <1% and she has a FGFR2 mutation on next-generation sequencing. What is the appropriate first-line treatment?
+
+def read_json_file(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
