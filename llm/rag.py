@@ -112,7 +112,7 @@ def create_evaluation_chain(input_directory='none'):
     prompt_specialist = extract_up_to_number(input_directory)
 
     EVALUATION_SYSTEM_PROMPT = f"""You have 30 years experience practicing oncology.
-    Your job is to compare a correct Control Treatment plan to either multiple following treatments or supporting text.
+    Your job is to compare a correct Control Treatment plan to either multiple following treatments or supporting texts.
     The "Control Treatment" will always come first, followed by TREATMENT 1:, TREATMENT 2:, TREATMENT 3:, etc.
     You need to identify which of the treatments is the most like the "Control Treatment".
     If you don't know the answer to a question, please don't share false information.

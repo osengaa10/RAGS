@@ -1,5 +1,6 @@
 ui/node_modules/
 llm/.env
+ui/src/firebase.jsx
 llm/db/*
 llm/data/*
 llm/stage_data/*

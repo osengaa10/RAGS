@@ -24,7 +24,6 @@ import {
     useEffect(() => {
       axios.get(`http://localhost:8000/databases`)
         .then((response) =>{
-          console.log("response:: ", response.data)
           setVectorDBList(response.data)
         })
     },[])

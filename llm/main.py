@@ -95,14 +95,16 @@ async def benchmarking():
     with open("../benchmarking/prompts-and-answers.json", 'r') as file:
         data = json.load(file)
         questions = [item['q'] for item in data]
-        control_answers = [item['a'] for item in data]
     for vector_db in vector_db_list:
         llm_response_list = []
         qa_chain = create_chain(vector_db)
+        print(f"==================================")
+        print(f"vectorDB: {vector_db}")
+        print(f"==================================")
+        question_number = 1
         for question in questions:
             query = json.dumps(question)
             llm_response = qa_chain(query)
-            print(f"query: {query}")
             wrap_text_preserve_newlines(llm_response['result'])
             sources = []
             try:
@@ -116,6 +118,8 @@ async def benchmarking():
             "answer": process_llm_response(llm_response),
             "sources": sources
             })
+            print(f"question: {question_number}")
+            question_number += 1
             
         with open(f'../benchmarking/{vector_db}-benchmarking.json', 'w+') as file:
             try:

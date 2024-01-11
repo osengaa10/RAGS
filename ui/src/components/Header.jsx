@@ -1,7 +1,10 @@
-import { HomeTwoTone, CloudUploadOutlined, SettingOutlined } from '@ant-design/icons';
+import { HomeTwoTone, CloudUploadOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import {  signOut } from "firebase/auth";
+import {auth} from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [current, setCurrent] = useState('h');
@@ -9,6 +12,18 @@ const Header = () => {
     console.log('click ', e);
     setCurrent(e.key);
   };
+
+  const navigate = useNavigate();
+ 
+  const handleLogout = () => {               
+      signOut(auth).then(() => {
+      // Sign-out successful.
+          navigate("/login");
+          console.log("Signed out successfully", auth)
+      }).catch((error) => {
+      // An error happened.
+      });
+  }
   return (
     <>
         <Menu onClick={onClick} selectedKeys={[current]} mode="horizontal" theme="light">
@@ -20,6 +35,9 @@ const Header = () => {
             </Menu.Item>
             <Menu.Item key="l" icon= {<SettingOutlined />} >
                 <Link to="/">RAG & LLM Configs</Link>
+            </Menu.Item>
+            <Menu.Item onClick={handleLogout} key="m" icon= {<LogoutOutlined />} >
+                <Link to="/login">Logout</Link>
             </Menu.Item>
         </Menu>
         <Outlet />

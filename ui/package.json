@@ -18,6 +18,7 @@
     "@mantine/core": "^7.1.7",
     "antd": "^5.12.1",
     "axios": "^1.6.0",
+    "firebase": "^10.7.1",
     "framer-motion": "^10.16.4",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
