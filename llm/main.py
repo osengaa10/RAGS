@@ -24,13 +24,15 @@ app.add_middleware(
 class Prompt(BaseModel):
     query: str
     input_directory: str
+    user_id: str
 
 @app.post("/qa")
 async def read_question(item: Prompt):
     query = json.dumps(item.query)
-    qa_chain = create_chain(item.input_directory)
+    qa_chain = create_chain(item.user_id, item.input_directory)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
+    print(f"llm_response:: ", llm_response)
     sources = []
     try:
         for source in llm_response["source_documents"]:
@@ -46,7 +48,7 @@ async def read_question(item: Prompt):
 
 
 @app.post("/chunk_and_embed")
-async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...)):
+async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...)):
     for file in files:
         try:
             with open(file.filename, 'wb') as f:
@@ -57,9 +59,8 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
         finally:
             file.file.close()
 
-    # print(f"RAG NAME::: {input_directory}")
-    chunk_and_embed(input_directory)
-    qa_chain = create_chain(input_directory)
+    chunk_and_embed(user_id, input_directory)
+    qa_chain = create_chain(user_id, input_directory)
     query = "what are some ways of transfering graphene?"
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
@@ -79,9 +80,14 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
 
 
 
-@app.get("/databases") 
-async def fetch_vector_databases():
-    filenames = os.listdir("./custom_db")
+@app.get("/databases/{userId}") 
+async def fetch_vector_databases(userId: str):
+    print(f"checking DIRECTORY./custom_db/{userId}")
+    # filenames = os.listdir(f"./custom_db/{userId}")
+    try:
+        filenames = os.listdir(f"./custom_db/{userId}")
+    except:
+        filenames = []
     return sorted(filenames)
     
 
@@ -97,7 +103,8 @@ async def benchmarking():
         questions = [item['q'] for item in data]
     for vector_db in vector_db_list:
         llm_response_list = []
-        qa_chain = create_chain(vector_db)
+        # using intergalactictrash27@protonmail.com account
+        qa_chain = create_chain(vector_db, user_id="uLlf51AUjehmXndE7HiUB0W3Fvg2")
         print(f"==================================")
         print(f"vectorDB: {vector_db}")
         print(f"==================================")

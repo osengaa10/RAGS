@@ -65,7 +65,7 @@ def extract_up_to_number(s):
 
 
 
-def create_chain(input_directory):
+def create_chain(user_id, input_directory):
     """create the chain to answer questions"""
     prompt_specialist = input_directory
     if input_directory == 'db':
@@ -89,7 +89,7 @@ def create_chain(input_directory):
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )
-    persist_directory = f'custom_db/{input_directory}'
+    persist_directory = f'custom_db/{user_id}/{input_directory}'
     chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
     retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})

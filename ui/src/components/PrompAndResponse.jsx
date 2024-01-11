@@ -11,7 +11,8 @@ import {
     Select,
     Button, Textarea, Text, Divider,
   } from '@chakra-ui/react'
-
+  import { useAuthValue } from "../AuthContext"
+  
   function PromptAndResponse(){
     const [prompt, setPrompt] = useState('')
     const [answer, setAnswer] = useState(null)
@@ -20,9 +21,12 @@ import {
     const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
     const [vectorDBList, setVectorDBList] = useState([])
     const [vectorDB, setVectorDB] = useState('db')
+    const [user, setUser] = useState(null);
+
+    const {currentUser} = useAuthValue()
 
     useEffect(() => {
-      axios.get(`http://localhost:8000/databases`)
+      axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
         .then((response) =>{
           setVectorDBList(response.data)
         })
@@ -43,7 +47,7 @@ import {
         e.preventDefault();
         setLoading('loading...')
         setGradients('linear(to-r, green.200, pink.500)')
-        axios.post(`http://localhost:8000/qa`, {query: prompt, input_directory: vectorDB})
+        axios.post(`http://localhost:8000/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
           .then((response) => {
             setAnswer(response.data.answer)
             setLoading(null)

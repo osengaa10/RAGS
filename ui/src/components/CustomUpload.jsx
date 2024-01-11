@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react'
 import { AutoComplete, Button } from 'antd';
 import PromptAndResponse from './PrompAndResponse'
+import { useAuthValue } from "../AuthContext"
 
 function CustomUpload() {
   const [ragName, setRagName] = useState('')
@@ -25,13 +26,15 @@ function CustomUpload() {
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
   let navigate = useNavigate();
+  const {currentUser} = useAuthValue()
+
 
   const options = vectorDBList.map((item, index) => {
     return { label: item, value: String(index + 1) };
 });
 
   useEffect(() => {
-    axios.get(`http://localhost:8000/databases`)
+    axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
       .then((response) =>{
         setVectorDBList(response.data)
       })
@@ -74,6 +77,7 @@ function CustomUpload() {
       formData.append(`files`, file);
     });
     formData.append(`input_directory`, ragName)
+    formData.append(`user_id`, currentUser.uid)
     axios.post('http://localhost:8000/chunk_and_embed', formData)
     .then(response => {
       // Handle the response from the server

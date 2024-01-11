@@ -27,7 +27,7 @@ import configs
 ################################################################################
 # split documents into chunks, create embeddings, store embeddings in chromaDB #
 ################################################################################
-def chunk_and_embed(input_directory):
+def chunk_and_embed(user_id, input_directory):
     """split documents into chunks, create embeddings, store embeddings in chromaDB"""
     chunk_size = 1000
     chunk_overlap=200
@@ -39,7 +39,7 @@ def chunk_and_embed(input_directory):
     texts = text_splitter.split_documents(documents)
     print(f' number of chunks {len(texts)}')
 
-    persist_directory = f'custom_db/{input_directory}'
+    persist_directory = f'custom_db/{user_id}/{input_directory}'
     t1 = time.perf_counter()
     Chroma.from_documents(documents=texts,
                                     embedding=configs.embedding,
@@ -50,7 +50,7 @@ def chunk_and_embed(input_directory):
     print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
 
     src_dir = './stage_data'
-    dst_dir = f'./data/{input_directory}'
+    dst_dir = f'./data/{user_id}/{input_directory}'
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 
