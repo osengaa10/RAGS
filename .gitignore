@@ -8,3 +8,4 @@ llm/rag-env
 llm/__pycache__
 scratch*
 llm/custom_db
+ui/dist/

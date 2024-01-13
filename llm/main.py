@@ -26,10 +26,18 @@ class Prompt(BaseModel):
     input_directory: str
     user_id: str
 
+class Rag(BaseModel):
+    user_id: str
+    input_directory: str
+
+
 @app.post("/qa")
 async def read_question(item: Prompt):
     query = json.dumps(item.query)
-    qa_chain = create_chain(item.user_id, item.input_directory)
+    if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
+        qa_chain = create_chain(item.user_id, item.input_directory)
+    else:
+        qa_chain = create_user_chain(item.user_id, item.input_directory)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     print(f"llm_response:: ", llm_response)
@@ -59,23 +67,23 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
         finally:
             file.file.close()
 
-    chunk_and_embed(user_id, input_directory)
-    qa_chain = create_chain(user_id, input_directory)
-    query = "what are some ways of transfering graphene?"
-    llm_response = qa_chain(query)
-    wrap_text_preserve_newlines(llm_response['result'])
-    sources = []
-    try:
-        for source in llm_response["source_documents"]:
-            sources.append(source)
-    except:
-        print("NO SOURCES??")
-        pass
+    return chunk_and_embed(user_id, input_directory)
+    # qa_chain = create_chain(user_id, input_directory)
+    # query = "what are some ways of transfering graphene?"
+    # llm_response = qa_chain(query)
+    # wrap_text_preserve_newlines(llm_response['result'])
+    # sources = []
+    # try:
+    #     for source in llm_response["source_documents"]:
+    #         sources.append(source)
+    # except:
+    #     print("NO SOURCES??")
+    #     pass
  
-    return {
-        "answer": process_llm_response(llm_response),
-        "sources": sources
-    }
+    # return {
+    #     "answer": process_llm_response(llm_response),
+    #     "sources": sources
+    # }
 
 
 
@@ -91,6 +99,22 @@ async def fetch_vector_databases(userId: str):
     return sorted(filenames)
     
 
+@app.post("/delete") 
+async def delete_vector_database(item: Rag):
+    print(f"checking DIRECTORY./custom_db/{item.user_id}/{item.input_directory}")
+    # filenames = os.listdir(f"./custom_db/{userId}")
+    # Path to the directory to be removed
+    directory_path = f'./custom_db/{item.user_id}/{item.input_directory}'
+
+    # Check if directory exists
+    if os.path.exists(directory_path):
+        # Remove the directory and all its contents
+        shutil.rmtree(directory_path)
+        print(f"Directory '{directory_path}' has been removed.")
+    else:
+        print(f"Directory '{directory_path}' does not exist.")
+   
+    return f'{item.input_directory} has been deleted'
 
 
 @app.get("/benchmark")

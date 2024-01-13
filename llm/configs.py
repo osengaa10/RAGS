@@ -68,7 +68,7 @@ class TogetherLLM(LLM):
 # )
 
 
-model_name = "BAAI/bge-large-en"
+model_name = "BAAI/bge-small-en-v1.5"
 encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine similarity
 model_norm = HuggingFaceBgeEmbeddings(
     model_name=model_name,

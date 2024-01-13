@@ -23,7 +23,7 @@ import {
     const [vectorDB, setVectorDB] = useState('db')
     const [user, setUser] = useState(null);
 
-    const {currentUser} = useAuthValue()
+    const { currentUser } = useAuthValue()
 
     useEffect(() => {
       axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
@@ -61,7 +61,7 @@ import {
 
     return(
         <>
-        <Select placeholder='Select RAG' onChange={selectVectorDB}>
+        <Select placeholder='Select Knowledge base' onChange={selectVectorDB}>
         { 
           vectorDBList.map((vectorDB) =>
           <option value={vectorDB}>{vectorDB}</option>

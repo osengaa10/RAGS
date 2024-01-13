@@ -12,7 +12,6 @@ import {
   Text
 } from '@chakra-ui/react'
 import { AutoComplete, Button } from 'antd';
-import PromptAndResponse from './PrompAndResponse'
 import { useAuthValue } from "../AuthContext"
 
 function CustomUpload() {
@@ -34,10 +33,7 @@ function CustomUpload() {
 });
 
   useEffect(() => {
-    axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
-      .then((response) =>{
-        setVectorDBList(response.data)
-      })
+    fetchDatabases()
   },[])
 
 
@@ -46,6 +42,12 @@ function CustomUpload() {
      background-position: 200%;
    }
 `
+   const fetchDatabases = () => {
+    axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
+      .then((response) =>{
+        setVectorDBList(response.data)
+      })
+   }
 
   const handleFileChange = (e) => {
     const files = e.target.files;
@@ -91,6 +93,23 @@ function CustomUpload() {
   }
 
 
+  const handleDelete = () => {
+    if (confirm(`Are you sure you want to delete ${ragName}?`)) {
+      // Save it!
+      axios.post('http://localhost:8000/delete', {user_id: currentUser.uid, input_directory: ragName})
+      .then(response => {
+      fetchDatabases()
+      })
+      .catch(error => {
+        console.log("Error Deleting directory: ", error)
+    })
+    } else {
+      console.log(`${ragName} not deleted.`);
+    }
+    
+  }
+
+
   return (
     <Box
       h='calc(100vh)'
@@ -129,12 +148,26 @@ function CustomUpload() {
           color='pink.500'
           size='xl'
         /> 
-        : <Button onClick={() => handleUpload()} type="primary">
+        : 
+        <>
+        <Button style={{margin: '5px'}} onClick={() => handleUpload()} type="primary">
         Submit
-        </Button> }
+        </Button> 
+        {ragName ?
+          <Button type="primary" style={{marginRight: '5px'}} onClick={() => handleDelete()} danger>
+          Delete
+          </Button>
+        :
+        <></>
+        }
+        </>
+      
+      }
         
       </div>
     </div>
+    <br />
+  <Text as='i'>*100 pages takes about 40 seconds. This only needs to be done once.</Text>
     </Box>
 
   )

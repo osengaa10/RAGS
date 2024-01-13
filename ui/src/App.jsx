@@ -1,43 +1,55 @@
-import {useState, useEffect} from 'react'
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom';
-import './App.css'
+import { useState, useEffect } from 'react';
+import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider, Outlet, Navigate } from 'react-router-dom';
+import './App.css';
 import Header from './components/Header';
 import CustomUpload from './components/CustomUpload';
 import Home from './components/Home';
 import Signup from './components/Signup';
 import Login from './components/Login';
-import { auth } from './firebase'
+import { auth } from './firebase';
 import { AuthProvider } from './AuthContext';
-import {onAuthStateChanged} from 'firebase/auth'
+import { onAuthStateChanged } from 'firebase/auth';
 
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<Header />}>
-      <Route path="/signup" element={<Signup/>}/>
-      <Route path="/login" element={<Login/>}/>
-      <Route index element={<Home />} />
-      <Route path="custom" element={<CustomUpload />} />
-    </Route>
-  )
-)
+function App() {
+  const [currentUser, setCurrentUser] = useState(null);
 
-function App({routes}) {
-  const [currentUser, setCurrentUser] = useState(null)
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user)
-     })
-  }, [])
-  return(
-    <>
-    <AuthProvider value={{currentUser}}>
-    <RouterProvider router={router}/>  
-    </AuthProvider>
-    
-    </>
-  )
+      setCurrentUser(user);
+    });
+  }, []);
 
-  
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<Layout currentUser={currentUser} />}>
+        <Route index element={<ProtectedRoute currentUser={currentUser}><Home /></ProtectedRoute>} />
+        <Route path="custom" element={<ProtectedRoute currentUser={currentUser}><CustomUpload /></ProtectedRoute>} />
+        <Route path="/signup" element={currentUser ? <Navigate to="/" /> : <Signup />} />
+        <Route path="/login" element={currentUser ? <Navigate to="/" /> : <Login />} />
+      </Route>
+    )
+  );
+
+  return (
+    <AuthProvider value={{ currentUser }}>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
 
-export default App
+function Layout({ currentUser }) {
+  return (
+    <>
+      {currentUser ? <Header displayName={currentUser.email} />
+      : <Outlet />
+    }
+      
+    </>
+  );
+}
+
+function ProtectedRoute({ currentUser, children }) {
+  return currentUser ? children : <Navigate to="/login" />;
+}
+
+export default App;

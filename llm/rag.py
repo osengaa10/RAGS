@@ -101,6 +101,44 @@ def create_chain(user_id, input_directory):
                                         verbose=True,
                                         memory=memory)
 
+def create_user_chain(user_id, input_directory):
+    """create the chain to answer questions"""
+
+    # PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing {prompt_specialist}.
+    # Always anwser the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. 
+    # The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. 
+    # If you don't know the answer to a question, please don't share false information.
+    
+    # """
+
+    # instruction = """CONTEXT:/n/n {context}/n
+
+    # Question: {question}"""
+
+
+    PARAMETERIZED_SYSTEM_PROMPT = """You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
+    If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please do not share false information.
+    """
+
+    instruction = """CONTEXT:/n/n {context}/n
+
+    Question: {question}"""
+    SYSTEM_PROMPT = B_SYS + PARAMETERIZED_SYSTEM_PROMPT + E_SYS
+    prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
+    llama_prompt = PromptTemplate(
+        template=prompt_template, input_variables=["context", "question", "chat_history"]
+    )
+    persist_directory = f'custom_db/{user_id}/{input_directory}'
+    chain_type_kwargs = {"prompt": llama_prompt}
+    vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
+    retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
+    return RetrievalQA.from_chain_type(llm=configs.llm,
+                                        chain_type="stuff",
+                                        retriever=retriever,
+                                        chain_type_kwargs=chain_type_kwargs,
+                                        return_source_documents=True,
+                                        verbose=True,
+                                        memory=memory)
 
 
 def create_evaluation_chain(input_directory='none'):

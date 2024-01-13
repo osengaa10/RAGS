@@ -6,7 +6,7 @@ import {  signOut } from "firebase/auth";
 import {auth} from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+const Header = (props) => {
   const [current, setCurrent] = useState('h');
   const onClick = (e) => {
     console.log('click ', e);
@@ -14,7 +14,6 @@ const Header = () => {
   };
 
   const navigate = useNavigate();
- 
   const handleLogout = () => {               
       signOut(auth).then(() => {
       // Sign-out successful.
@@ -30,14 +29,14 @@ const Header = () => {
             <Menu.Item key="h" icon= {<HomeTwoTone />}>
                 <Link to="/">Home</Link>
             </Menu.Item>
-            <Menu.Item key="r" icon= {<CloudUploadOutlined />} style={{ marginLeft: 'auto' }}>
-                <Link to="/custom">Custom Upload</Link>
+            <Menu.Item key="r" icon= {<CloudUploadOutlined />} >
+                <Link to="/custom">My Knowledge bases</Link>
             </Menu.Item>
             <Menu.Item key="l" icon= {<SettingOutlined />} >
                 <Link to="/">RAG & LLM Configs</Link>
             </Menu.Item>
-            <Menu.Item onClick={handleLogout} key="m" icon= {<LogoutOutlined />} >
-                <Link to="/login">Logout</Link>
+            <Menu.Item onClick={handleLogout} key="m" style={{ marginLeft: 'auto' }} icon= {<LogoutOutlined />} >
+                <Link to="/login">Logout {props.displayName}</Link>
             </Menu.Item>
         </Menu>
         <Outlet />

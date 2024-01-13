@@ -45,7 +45,7 @@ const Login = () => {
             fontSize='6xl'
             fontWeight='extrabold'
             >
-                Chat with PDFs
+                Give an LLM a memory
             </Text>                        
                                                 
                 <form>                                              
