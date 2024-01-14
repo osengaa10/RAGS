@@ -4,6 +4,7 @@ db/
 data/
 custom_db/
 rag_env/
+rags_venv/
 __pycache__
 .git
 *.pyc

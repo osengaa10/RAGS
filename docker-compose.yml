@@ -5,7 +5,7 @@ services:
     image: intergalactictrash/rags-frontend
     build: ./ui
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
