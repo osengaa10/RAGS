@@ -31,7 +31,9 @@ def chunk_and_embed(user_id, input_directory):
     """split documents into chunks, create embeddings, store embeddings in chromaDB"""
     chunk_size = 1000
     chunk_overlap=200
-    loader = DirectoryLoader('/home/austin/code/ai/RAGS/llm/stage_data', glob="./*.pdf", loader_cls=PyPDFLoader)
+    current_dir = os.getcwd()
+    print(f"chunk_and_embed directory==== {current_dir}")
+    loader = DirectoryLoader('./rag_data/stage_data', glob="./*.pdf", loader_cls=PyPDFLoader)
     documents = loader.load()
     print(f' number of documents {len(documents)}')
     #splitting the text into
@@ -39,7 +41,7 @@ def chunk_and_embed(user_id, input_directory):
     texts = text_splitter.split_documents(documents)
     print(f' number of chunks {len(texts)}')
 
-    persist_directory = f'custom_db/{user_id}/{input_directory}'
+    persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
     t1 = time.perf_counter()
     Chroma.from_documents(documents=texts,
                                     embedding=configs.embedding,
@@ -49,8 +51,8 @@ def chunk_and_embed(user_id, input_directory):
     print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
     print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
 
-    src_dir = './stage_data'
-    dst_dir = f'./data/{user_id}/{input_directory}'
+    src_dir = './rag_data/stage_data'
+    dst_dir = f'./rag_data/data/{user_id}/{input_directory}'
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 

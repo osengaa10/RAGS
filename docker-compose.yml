@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   frontend:
+    image: intergalactictrash/rags-frontend
     build: ./ui
     ports:
       - "80:80"
@@ -11,9 +12,12 @@ services:
       - app-network
 
   backend:
+    image: intergalactictrash/rags-backend
     build: ./llm
     ports:
       - "8000:8000"
+    volumes:
+      - /home/austin/rag_data:/app/rag_data
     networks:
       - app-network
 

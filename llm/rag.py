@@ -89,7 +89,7 @@ def create_chain(user_id, input_directory):
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )
-    persist_directory = f'custom_db/{user_id}/{input_directory}'
+    persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
     chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
     retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
@@ -128,7 +128,7 @@ def create_user_chain(user_id, input_directory):
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )
-    persist_directory = f'custom_db/{user_id}/{input_directory}'
+    persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
     chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
     retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})
@@ -166,7 +166,7 @@ def create_evaluation_chain(input_directory='none'):
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )
-    persist_directory = f'custom_db/{input_directory}'
+    persist_directory = f'rag_data/custom_db/{input_directory}'
     chain_type_kwargs = {"prompt": llama_prompt}
     vectordb = Chroma(embedding_function=configs.embedding,persist_directory=persist_directory)
     retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 7})

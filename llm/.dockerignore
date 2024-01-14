@@ -1,0 +1,16 @@
+stage_data/
+rag_data/
+db/
+data/
+custom_db/
+rag_env/
+__pycache__
+.git
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+venv
+ENV
+env

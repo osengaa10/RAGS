@@ -9,3 +9,4 @@ llm/__pycache__
 scratch*
 llm/custom_db
 ui/dist/
+/llm/rag_data/

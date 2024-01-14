@@ -43,7 +43,7 @@ function CustomUpload() {
    }
 `
    const fetchDatabases = () => {
-    axios.get(`http://localhost:8000/databases/${currentUser.uid}`)
+    axios.get(`http://localhost:8000/api/databases/${currentUser.uid}`)
       .then((response) =>{
         setVectorDBList(response.data)
       })
@@ -80,7 +80,7 @@ function CustomUpload() {
     });
     formData.append(`input_directory`, ragName)
     formData.append(`user_id`, currentUser.uid)
-    axios.post('http://localhost:8000/chunk_and_embed', formData)
+    axios.post('http://localhost:8000/api/chunk_and_embed', formData)
     .then(response => {
       // Handle the response from the server
       setUploading(false)
@@ -96,7 +96,7 @@ function CustomUpload() {
   const handleDelete = () => {
     if (confirm(`Are you sure you want to delete ${ragName}?`)) {
       // Save it!
-      axios.post('http://localhost:8000/delete', {user_id: currentUser.uid, input_directory: ragName})
+      axios.post('http://localhost:8000/api/delete', {user_id: currentUser.uid, input_directory: ragName})
       .then(response => {
       fetchDatabases()
       })

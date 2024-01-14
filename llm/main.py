@@ -8,11 +8,14 @@ import shutil
 from typing import List
 import json
 from configs import *
+from fastapi import APIRouter
 
 
 
 app = FastAPI()
 origins = ["*"]
+
+prefix_router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +34,7 @@ class Rag(BaseModel):
     input_directory: str
 
 
-@app.post("/qa")
+@prefix_router.post("/qa")
 async def read_question(item: Prompt):
     query = json.dumps(item.query)
     if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
@@ -40,7 +43,6 @@ async def read_question(item: Prompt):
         qa_chain = create_user_chain(item.user_id, item.input_directory)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
-    print(f"llm_response:: ", llm_response)
     sources = []
     try:
         for source in llm_response["source_documents"]:
@@ -55,56 +57,45 @@ async def read_question(item: Prompt):
     }
 
 
-@app.post("/chunk_and_embed")
+@prefix_router.post("/chunk_and_embed")
 async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...)):
+    error = ''
     for file in files:
         try:
             with open(file.filename, 'wb') as f:
                 shutil.copyfileobj(file.file, f)
-                shutil.move(f"./{file.filename}", f"./stage_data/{file.filename}")
+                print(f"upload_to_vector_db dir==== {os.getcwd()}")
+                print(F"=====LANDING LS====== {os.listdir('./')}")
+                shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{file.filename}")
+                print(F"=====AFTER MOVED LS====== {os.listdir('./')}")
         except Exception:
-            return {"message": "There was an error uploading the file(s)"}
+            error = Exception
+            return {"message": f"Error: {Exception})"}
         finally:
             file.file.close()
-
+    print(f"ERRORRRRRRRR::: {error}")
     return chunk_and_embed(user_id, input_directory)
-    # qa_chain = create_chain(user_id, input_directory)
-    # query = "what are some ways of transfering graphene?"
-    # llm_response = qa_chain(query)
-    # wrap_text_preserve_newlines(llm_response['result'])
-    # sources = []
-    # try:
-    #     for source in llm_response["source_documents"]:
-    #         sources.append(source)
-    # except:
-    #     print("NO SOURCES??")
-    #     pass
- 
-    # return {
-    #     "answer": process_llm_response(llm_response),
-    #     "sources": sources
-    # }
 
 
 
 
-@app.get("/databases/{userId}") 
+@prefix_router.get("/databases/{userId}") 
 async def fetch_vector_databases(userId: str):
-    print(f"checking DIRECTORY./custom_db/{userId}")
-    # filenames = os.listdir(f"./custom_db/{userId}")
+    print(f"checking DIRECTORY./rag_data/custom_db/{userId}")
+    # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     try:
-        filenames = os.listdir(f"./custom_db/{userId}")
+        filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     except:
         filenames = []
     return sorted(filenames)
     
 
-@app.post("/delete") 
+@prefix_router.post("/delete") 
 async def delete_vector_database(item: Rag):
-    print(f"checking DIRECTORY./custom_db/{item.user_id}/{item.input_directory}")
-    # filenames = os.listdir(f"./custom_db/{userId}")
+    print(f"checking DIRECTORY./rag_data/custom_db/{item.user_id}/{item.input_directory}")
+    # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     # Path to the directory to be removed
-    directory_path = f'./custom_db/{item.user_id}/{item.input_directory}'
+    directory_path = f'./rag_data/custom_db/{item.user_id}/{item.input_directory}'
 
     # Check if directory exists
     if os.path.exists(directory_path):
@@ -117,7 +108,7 @@ async def delete_vector_database(item: Rag):
     return f'{item.input_directory} has been deleted'
 
 
-@app.get("/benchmark")
+@prefix_router.get("/benchmark")
 async def benchmarking():
     vector_db_list = ["oncology2-bge-large-c1000-o200", "oncology3-bge-large-c500-o100","oncology4-bge-large-c2000-o400"]
     # vector_db_list = ["oncology4-bge-large-c2000-o400"]
@@ -163,7 +154,7 @@ async def benchmarking():
     return "answers made"
 
 
-@app.get("/evaluate")
+@prefix_router.get("/evaluate")
 async def evaluate():
     file_paths = [
     '../benchmarking/prompts-and-answers.json',
@@ -243,7 +234,7 @@ async def evaluate():
     return llm_comparison_sources
 
 
-
+app.include_router(prefix_router)
 
 if __name__ == "__main__":
     import uvicorn
