@@ -24,9 +24,8 @@ import {
     const [user, setUser] = useState(null);
 
     const { currentUser } = useAuthValue()
-
     useEffect(() => {
-      axios.get(`http://localhost:8000/api/databases/${currentUser.uid}`)
+      axios.get(`https://osenga.me/api/databases/${currentUser.uid}`)
         .then((response) =>{
           setVectorDBList(response.data)
         })
@@ -47,7 +46,7 @@ import {
         e.preventDefault();
         setLoading('loading...')
         setGradients('linear(to-r, green.200, pink.500)')
-        axios.post(`http://localhost:8000/api/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
+        axios.post(`https://osenga.me/api/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
           .then((response) => {
             setAnswer(response.data.answer)
             setLoading(null)

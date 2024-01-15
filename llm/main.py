@@ -17,12 +17,13 @@ origins = ["*"]
 
 prefix_router = APIRouter(prefix="/api")
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 class Prompt(BaseModel):
     query: str
@@ -65,10 +66,6 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
             with open(file.filename, 'wb') as f:
                 shutil.copyfileobj(file.file, f)
                 print(f"upload_to_vector_db dir==== {os.getcwd()}")
-                print("will this print??????????")
-                # print(F"=====LANDING LS====== {os.listdir('./{file.filename}')}")                                
-                # print(F"=====move to LS====== {os.listdir('./rag_data/stage_data/')}")
-
                 shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{file.filename}")
                 print(F"=====AFTER MOVED LS====== {os.listdir('./')}")
         except Exception:
