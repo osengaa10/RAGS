@@ -3,17 +3,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {  createUserWithEmailAndPassword  } from 'firebase/auth';
 import { auth } from '../firebase';
 import {
-    AccordionPanel,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    Box,
-    AccordionIcon,
-    Spinner,
-    Select,
-    Button, Textarea, Text, Divider,
+    Button, Link, Text, Divider,
   } from '@chakra-ui/react'
-  import { Input, Row, Col } from 'antd';
+import { Input } from 'antd';
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -48,43 +41,58 @@ const Signup = () => {
             <Text
             bgColor='black'
             bgClip='text'
-            fontSize='6xl'
+            fontSize='4xl'
             fontWeight='extrabold'
             >
-                Give an LLM a memory
+                Chat with you docs
+            </Text> 
+            <Divider orientation='horizontal' />
+            <Text
+            style={{paddingTop: '10px'}}
+            bgColor='black'
+            bgClip='text'
+            fontSize='2xl'
+            fontWeight='normal'
+            >
+                Sign Up
             </Text>                        
                                                 
                 <form>                                              
-                    <div style={{padding: '20px'}}>
-                        <label htmlFor="email-address">
-                            Email address
+                    <div style={{padding: '5px'}}>
+                        <label style={{paddingRight: '5px'}} htmlFor="email-address">
+                            Email address:
                         </label>
                         
-                        <Input placeholder="Email address" onChange={(e)=>setEmail(e.target.value)}/>
+                        <Input style={{maxWidth: '350px'}} placeholder="Email address" onChange={(e)=>setEmail(e.target.value)}/>
                     </div>
                     <div style={{padding: '20px'}}>
-                        <label htmlFor="password">
-                            Password
+                        <label style={{paddingRight: '5px'}} htmlFor="password">
+                            Password:
                         </label>
-                        <Input type="password" placeholder="Password" required onChange={(e)=>setPassword(e.target.value)}/>
-                        <Button m="10px" colorScheme='blue' onClick={onSubmit}
+                        <Input.Password
+                            style={{maxWidth: '350px'}} 
+                            type="password" 
+                            placeholder="Password" 
+                            required 
+                            onChange={(e)=>setPassword(e.target.value)}
+                            iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                            />
+                    </div>
+                    <Button m="10px" colorScheme='blue' onClick={onSubmit}
                         _hover={{
                             bgGradient: 'linear(to-r, red.500, yellow.500)',
                         }}>Sign Up
-                        </Button>
-                    </div>                             
+                    </Button>                          
                 </form>
                 
-                <p className="text-sm text-white text-center">
-                    Already have an account? {' '}
+                <Text>
+                    No account yet? {' '}
                     <NavLink to="/login">
-                        <Button m="5px" colorScheme='blue'
-                        _hover={{
-                            bgGradient: 'linear(to-r, red.500, yellow.500)',
-                        }}>Sign in
-                        </Button>
+                        <Link color='teal.500' href='#'>
+                            Sign in
+                        </Link>
                     </NavLink>
-                </p>
+                </Text>
                                             
             </div>
             <br></br>

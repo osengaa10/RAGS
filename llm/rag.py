@@ -14,7 +14,6 @@ from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
 from langchain.chains.conversation.memory import ConversationKGMemory
 import configs
 
-
 ## Default LLaMA-2 prompt style
 B_INST, E_INST = "[INST]", "[/INST]"
 B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"

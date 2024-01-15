@@ -48,7 +48,7 @@ function Home() {
        <Text
         bgColor='black'
         bgClip='text'
-        fontSize='6xl'
+        fontSize='4xl'
         fontWeight='extrabold'
       >
         Ask a question

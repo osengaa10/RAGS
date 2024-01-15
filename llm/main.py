@@ -96,12 +96,20 @@ async def delete_vector_database(item: Rag):
     # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     # Path to the directory to be removed
     directory_path = f'./rag_data/custom_db/{item.user_id}/{item.input_directory}'
+    archive_path = f'./rag_data/data/{item.user_id}/{item.input_directory}'
 
+    if os.path.exists(archive_path):
+        # Remove the directory and all its contents
+        shutil.rmtree(archive_path)
+        print(f"Directory '{archive_path}' has been removed.")
+    else:
+        print(f"Directory '{archive_path}' does not exist.")
     # Check if directory exists
     if os.path.exists(directory_path):
         # Remove the directory and all its contents
         shutil.rmtree(directory_path)
         print(f"Directory '{directory_path}' has been removed.")
+        # Check if directory exists
     else:
         print(f"Directory '{directory_path}' does not exist.")
    

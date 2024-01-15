@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import Home from './Home';
 import './CustomUpload.css'
-import axios from 'axios'
+import { axiosBaseUrl } from '../axiosBaseUrl'
 import {
   Box,
   Input,
@@ -12,7 +12,10 @@ import {
   Text
 } from '@chakra-ui/react'
 import { AutoComplete, Button } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import { message, Upload } from 'antd';
 import { useAuthValue } from "../AuthContext"
+const { Dragger } = Upload;
 
 function CustomUpload() {
   const [ragName, setRagName] = useState('')
@@ -21,9 +24,9 @@ function CustomUpload() {
 
   const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
   const [vectorDBList, setVectorDBList] = useState([])
-  const [setFilteredRAGs, filteredRAGs] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
+  const [uploadTimeEstimate, setUploadTimeEstimate] = useState(null)
   let navigate = useNavigate();
   const {currentUser} = useAuthValue()
 
@@ -32,9 +35,41 @@ function CustomUpload() {
     return { label: item, value: String(index + 1) };
 });
 
+  const dummyRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+      onSuccess("ok");
+    }, 0);
+  };
   useEffect(() => {
     fetchDatabases()
   },[])
+  
+  let props = {
+    name: 'file',
+    multiple: true,
+    customRequest: dummyRequest,
+    status: 'done',
+    accept:'application/pdf',
+    onChange (e) {
+      // console.log("e:::: ", e.file.originFileObj)
+      // const files = e.file.originFileObj
+      let files = (e.fileList).map(object => object.originFileObj)
+      // let fileNames = (e.fileList).map(object => object.name);
+      let fileSize = (e.fileList).map(object => object.size);
+      setSelectedFiles(files);
+      // console.log("selectedFiles dragNdrop::: ", [...selectedFiles, ...file])
+      let totalSize = 0;
+      totalSize = fileSize.reduce((sum, number) => {
+        return sum + number;
+      }, 0)
+      console.log("totalSize::: ", totalSize/(1024 * 1024))
+      setUploadTimeEstimate(Math.round((totalSize/(1024 * 1024)*10)/60))
+      const sizeLimit = 500 * 1024 * 1024; // 500MB in bytes
+    },
+    onDrop(e) {
+      console.log('Dropped files', e.dataTransfer.files);
+    },
+  };
 
 
   const animation = keyframes `
@@ -43,16 +78,26 @@ function CustomUpload() {
    }
 `
    const fetchDatabases = () => {
-    axios.get(`https://osenga.me/api/databases/${currentUser.uid}`)
+    axiosBaseUrl.get(`/databases/${currentUser.uid}`)
       .then((response) =>{
         setVectorDBList(response.data)
       })
    }
 
-  const handleFileChange = (e) => {
-    const files = e.target.files;
-    setSelectedFiles([...selectedFiles, ...files]);
-  };
+  // const handleFileChange = (e) => {
+  //   const files = e.target.files;
+  //   setSelectedFiles([...selectedFiles, ...files]);
+  //   console.log("selectedFiles button::: ", [...selectedFiles, ...files])
+  //   let totalSize = 0;
+  //   for (let key in files) {
+  //     if (files.hasOwnProperty(key)) {
+  //       totalSize += files[key].size;
+  //     }
+  //   }
+  //   console.log("totalSize::: ", totalSize/(1024 * 1024))
+  //   setUploadTimeEstimate(Math.round((totalSize/(1024 * 1024)*10)/60))
+  //   const sizeLimit = 500 * 1024 * 1024; // 500MB in bytes
+  // };
 
 
 
@@ -80,7 +125,7 @@ function CustomUpload() {
     });
     formData.append(`input_directory`, ragName)
     formData.append(`user_id`, currentUser.uid)
-    axios.post('https://osenga.me/api/chunk_and_embed', formData)
+    axiosBaseUrl.post('/chunk_and_embed', formData)
     .then(response => {
       // Handle the response from the server
       setUploading(false)
@@ -96,8 +141,9 @@ function CustomUpload() {
   const handleDelete = () => {
     if (confirm(`Are you sure you want to delete ${ragName}?`)) {
       // Save it!
-      axios.post('https://osenga.me/api/delete', {user_id: currentUser.uid, input_directory: ragName})
+      axiosBaseUrl.post('/delete', {user_id: currentUser.uid, input_directory: ragName})
       .then(response => {
+        setSearchedValue('')
       fetchDatabases()
       })
       .catch(error => {
@@ -121,19 +167,29 @@ function CustomUpload() {
        <Text
         bgColor='black'
         bgClip='text'
-        fontSize='6xl'
+        fontSize='4xl'
         fontWeight='extrabold'
       >
         Custom File Q&A
       </Text> 
       
       <div>
-        <input style={{padding: '20px'}} type="file" accept=".pdf" onChange={handleFileChange} multiple/>
+        {/* <input style={{padding: '20px'}} type="file" accept=".pdf" onChange={handleFileChange} multiple/> */}
+        <Dragger {...props}>
+        <p className="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+          <p className="ant-upload-text">Click or drag file to this area to upload</p>
+          <p className="ant-upload-hint">
+            Support for a single or bulk upload.
+          </p>
+        </Dragger>
         <AutoComplete
           value={searchedValue}
           options={options}
           autoFocus={true}
           style={{width: 200}}
+          placeholder="knowledge base"
           filterOption={(searchedValue, option) =>
             option.label.toUpperCase().indexOf(searchedValue.toUpperCase()) !== -1
           }
@@ -167,7 +223,12 @@ function CustomUpload() {
       </div>
     </div>
     <br />
-  <Text as='i'>*100 pages takes about 40 seconds. This only needs to be done once.</Text>
+    { selectedFiles.length > 0 ?
+      <Text as='i'>*Estimated Time: {uploadTimeEstimate} mintue(s). This only needs to be done once.</Text>
+      :
+      <></>
+    }
+  
     </Box>
 
   )

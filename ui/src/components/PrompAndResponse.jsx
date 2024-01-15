@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { axiosBaseUrl } from '../axiosBaseUrl'
 import {
     AccordionPanel,
     Accordion,
@@ -25,7 +25,7 @@ import {
 
     const { currentUser } = useAuthValue()
     useEffect(() => {
-      axios.get(`https://osenga.me/api/databases/${currentUser.uid}`)
+      axiosBaseUrl.get(`/databases/${currentUser.uid}`)
         .then((response) =>{
           setVectorDBList(response.data)
         })
@@ -46,7 +46,7 @@ import {
         e.preventDefault();
         setLoading('loading...')
         setGradients('linear(to-r, green.200, pink.500)')
-        axios.post(`https://osenga.me/api/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
+        axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
           .then((response) => {
             setAnswer(response.data.answer)
             setLoading(null)

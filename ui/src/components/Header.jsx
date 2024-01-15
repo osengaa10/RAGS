@@ -30,11 +30,11 @@ const Header = (props) => {
                 <Link to="/">Home</Link>
             </Menu.Item>
             <Menu.Item key="r" icon= {<CloudUploadOutlined />} >
-                <Link to="/custom">My Knowledge bases</Link>
+                <Link to="/custom">Manage Knowledge bases</Link>
             </Menu.Item>
-            <Menu.Item key="l" icon= {<SettingOutlined />} >
+            {/* <Menu.Item key="l" icon= {<SettingOutlined />} >
                 <Link to="/">RAG & LLM Configs</Link>
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item onClick={handleLogout} key="m" style={{ marginLeft: 'auto' }} icon= {<LogoutOutlined />} >
                 <Link to="/login">Logout {props.displayName}</Link>
             </Menu.Item>
