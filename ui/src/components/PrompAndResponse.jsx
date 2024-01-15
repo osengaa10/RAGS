@@ -60,14 +60,14 @@ import {
 
     return(
         <>
-        <Select placeholder='Select Knowledge base' onChange={selectVectorDB}>
+        <Select style={{margin: '10px'}} placeholder='Select Knowledge base' onChange={selectVectorDB}>
         { 
           vectorDBList.map((vectorDB) =>
           <option value={vectorDB}>{vectorDB}</option>
           )
         }
         </Select>
-        <Textarea m='10px' placeholder='ask a question' onChange={handlePromptChange} />
+        <Textarea m='10px' placeholder='ask a question' onChange={handlePromptChange} />        
         <Button m="10px" colorScheme='blue' onClick={handleClick}
            _hover={{
             bgGradient: 'linear(to-r, red.500, yellow.500)',
