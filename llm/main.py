@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from rag import *
 from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
@@ -9,12 +9,18 @@ from typing import List
 import json
 from configs import *
 from fastapi import APIRouter
+import models
+from database import *
 
+from sqlalchemy.orm import Session
+from starlette import status
+import schemas
+import router.posts
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 origins = ["*"]
-
 prefix_router = APIRouter(prefix="/api")
 
 
@@ -34,6 +40,30 @@ class Rag(BaseModel):
     user_id: str
     input_directory: str
 
+
+@prefix_router.post('/test', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreatePost])
+def test_posts_sent(post_post:schemas.CreatePost, db:Session = Depends(get_db)):
+    new_post = models.Post(**post_post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return [new_post]
+
+
+@prefix_router.post('/convo', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreateUserConvo])
+def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_db)):
+    new_convo = models.UserConvos(**post_post.dict())
+    db.add(new_convo)
+    db.commit()
+    db.refresh(new_convo)
+    return [new_convo]
+
+
+
+@prefix_router.get('/', response_model=List[schemas.CreatePost])
+def test_posts(db: Session = Depends(get_db)):
+    post = db.query(models.Post).all()
+    return  post
 
 @prefix_router.post("/qa")
 async def read_question(item: Prompt):
