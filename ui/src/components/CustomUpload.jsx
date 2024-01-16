@@ -187,7 +187,7 @@ function CustomUpload() {
         <AutoComplete
           value={searchedValue}
           options={options}
-          autoFocus={true}
+          autoFocus={false}
           style={{width: 200}}
           placeholder="knowledge base"
           filterOption={(searchedValue, option) =>

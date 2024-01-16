@@ -40,7 +40,7 @@ const Login = () => {
             fontSize='4xl'
             fontWeight='extrabold'
             >
-                Chat with you docs
+                Chat with your docs
             </Text>
             <Divider orientation='horizontal' />
             <Text
