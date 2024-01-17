@@ -8,11 +8,12 @@ import {
 import PromptAndResponse from './PrompAndResponse';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from '../firebase';
+import Chat from './Chat';
 
 
 function Home() {
 
-  const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
+  const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
 
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {
@@ -42,9 +43,10 @@ function Home() {
       h='calc(100vh)'
       style={{overflow: 'auto'}}
       bgGradient={gradients}
+      color="black"
       animation= {`${animation} 1s linear infinite`}
     >
-    <div style={{padding: '50px'}}>
+    <div style={{padding: '10px'}}>
        <Text
         bgColor='black'
         bgClip='text'
@@ -53,7 +55,8 @@ function Home() {
       >
         Ask a question
       </Text> 
-      <PromptAndResponse />  
+      {/* <PromptAndResponse />   */}
+      <Chat />
     </div>
     </Box>
     </>
