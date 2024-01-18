@@ -58,19 +58,36 @@ const Chat = () => {
     
 
   const handleSendMessage = () => {
+    
     // if (prompt.trim()) {
-      axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
+    axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
           .then((response) => {
             setAnswer(response.data.answer)
             setLoading(null)
             setSources(response.data.sources)
-            // setMessages([...messages, { text: answer, sender: 'llm'}]);
             setMessages([...messages, { text: prompt, sender: 'user'}, { text: response.data.answer, sender: 'llm'}]);
-            console.log("messages:::", messages);
-          }).catch((e) => {
-            // setError('Api screwed up')
-            alert('Api screwed up')
+            const sauces = (response.data.sources).map(sauce => sauce.page_content)
+            axiosBaseUrl.post(`/convo`, 
+                {
+                    uid: String(currentUser.uid), 
+                    rag: vectorDB, 
+                    prompt: prompt, 
+                    response: response.data.answer, 
+                    sources: sauces
+                })
+                .then((res) => {
+                    console.log(`response from db: ${res}`)
+                })
+                .catch((err) => {
+                    console.log(`convo error ${err}`)
+                })
           })
+          .catch((e) => {
+            console.log(`llm error ${e}`)
+            alert('Api screwed up')
+          }) 
+
+        console.log(`end of method`)
       setPrompt('');
   };
 
@@ -132,10 +149,11 @@ const Chat = () => {
                         <AccordionIcon />
                       </AccordionButton>
                     </h2>
+                    
                     {sources.map(sauce =>
                         <AccordionPanel textAlign='left' pb={4}>
                         {/* Replace this with actual source list */}
-                        PAGE {sauce.metadata.page}: {sauce.page_content}
+                        PAGE {sauce.metadata.page + 1}: {sauce.page_content}
                       </AccordionPanel>
                     )}
                     

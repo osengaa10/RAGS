@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import Column, Integer, String, TIMESTAMP, Boolean, text
+from sqlalchemy import Column, Integer, ARRAY, String, TIMESTAMP, Boolean, text
 
 
 class Post(Base):
@@ -20,5 +20,6 @@ class UserConvos(Base):
     rag = Column(String,nullable=False)
     prompt = Column(String,nullable=False)
     response = Column(String,nullable=False)
+    sources = Column(ARRAY(String),nullable=False)
     published = Column(Boolean, server_default='TRUE')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))

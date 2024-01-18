@@ -18,6 +18,7 @@ class UserConvosBase(BaseModel):
     uid: str
     rag: str
     prompt: str
+    sources: list
     response: str
 
     class Config:
