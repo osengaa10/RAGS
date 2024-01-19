@@ -9,7 +9,7 @@ class Post(Base):
     title = Column(String,nullable=False)
     content = Column(String,nullable=False)
     published = Column(Boolean, server_default='TRUE')
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))
+    created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))
 
 
 class UserConvos(Base):
@@ -22,4 +22,4 @@ class UserConvos(Base):
     response = Column(String,nullable=False)
     sources = Column(ARRAY(String),nullable=False)
     published = Column(Boolean, server_default='TRUE')
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))
+    created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))

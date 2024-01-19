@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+import datetime
 
 class PostBase(BaseModel):
     content: str
@@ -26,5 +26,21 @@ class UserConvosBase(BaseModel):
 
 
 class CreateUserConvo(UserConvosBase):
+    class Config:
+        orm_mode = True
+
+
+class UserConvoHistoryBase(BaseModel):
+    rag: str
+    prompt: str
+    sources: list
+    response: str
+    created_at: str
+
+    class Config:
+        orm_mode = True
+
+
+class CreateUserConvoHistoryBase(UserConvosBase):
     class Config:
         orm_mode = True

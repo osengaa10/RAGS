@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from rag import *
 from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ from configs import *
 from fastapi import APIRouter
 import models
 from database import *
-
+from sqlalchemy import text 
 from sqlalchemy.orm import Session
 from starlette import status
 import schemas
@@ -40,6 +41,8 @@ class Rag(BaseModel):
     user_id: str
     input_directory: str
 
+class QueryRequest(BaseModel):
+    uid: str
 
 @prefix_router.post('/test', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreatePost])
 def test_posts_sent(post_post:schemas.CreatePost, db:Session = Depends(get_db)):
@@ -49,8 +52,28 @@ def test_posts_sent(post_post:schemas.CreatePost, db:Session = Depends(get_db)):
     db.refresh(new_post)
     return [new_post]
 
+class QueryRequest(BaseModel):
+    uid: str
 
-@prefix_router.post('/convo', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreateUserConvo])
+@prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
+def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    sql_query = text("SELECT rag,prompt,response,sources,created_at FROM user_convos WHERE uid = :uid")
+    result = db.execute(sql_query, {'uid': uid})
+    posts = result.fetchall()
+    formatted_posts = []
+    for post in posts:
+        formatted_post = {
+            "rag": post.rag,
+            "prompt": post.prompt,
+            "response": post.response,
+            "sources": post.sources,
+            "created_at": post.created_at.isoformat() if post.created_at else None
+        }
+        formatted_posts.append(formatted_post)
+    return formatted_posts
+
+@prefix_router.post('/archive_message', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreateUserConvo])
 def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_db)):
     new_convo = models.UserConvos(**post_post.dict())
     db.add(new_convo)
@@ -59,11 +82,24 @@ def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_
     return [new_convo]
 
 
+@prefix_router.post('/delete_convo_history')
+def test_posts(request_body: Rag, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    rag_name = request_body.input_directory
 
-@prefix_router.get('/', response_model=List[schemas.CreatePost])
-def test_posts(db: Session = Depends(get_db)):
-    post = db.query(models.Post).all()
-    return  post
+    sql_query = text("DELETE FROM user_convos WHERE uid = :uid AND rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    # posts = result.fetchall()
+    db.commit()
+
+    return JSONResponse(content={"message": "Convo history deleted"})
+
+
+
+# @prefix_router.post('/query', response_model=List[schemas.CreatePost])
+# def test_posts(db: Session = Depends(get_db)):
+#     post = db.query(models.Post).all()
+#     return  post
 
 @prefix_router.post("/qa")
 async def read_question(item: Prompt):

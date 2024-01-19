@@ -55,7 +55,7 @@ function Home() {
       >
         Ask a question
       </Text> 
-      {/* <PromptAndResponse />   */}
+            
       <Chat />
     </div>
     </Box>

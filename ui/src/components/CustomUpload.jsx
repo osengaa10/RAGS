@@ -22,7 +22,7 @@ function CustomUpload() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
 
-  const [gradients, setGradients] = useState('radial(gray.300, yellow.400, pink.200)')
+  const [gradients, setGradients] = useState('radial(gray.100, yellow.100, pink.100)')
   const [vectorDBList, setVectorDBList] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
@@ -83,23 +83,6 @@ function CustomUpload() {
         setVectorDBList(response.data)
       })
    }
-
-  // const handleFileChange = (e) => {
-  //   const files = e.target.files;
-  //   setSelectedFiles([...selectedFiles, ...files]);
-  //   console.log("selectedFiles button::: ", [...selectedFiles, ...files])
-  //   let totalSize = 0;
-  //   for (let key in files) {
-  //     if (files.hasOwnProperty(key)) {
-  //       totalSize += files[key].size;
-  //     }
-  //   }
-  //   console.log("totalSize::: ", totalSize/(1024 * 1024))
-  //   setUploadTimeEstimate(Math.round((totalSize/(1024 * 1024)*10)/60))
-  //   const sizeLimit = 500 * 1024 * 1024; // 500MB in bytes
-  // };
-
-
 
   const onSelect = (data, option) => {
     setSelectedOption(option);

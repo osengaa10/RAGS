@@ -4,12 +4,11 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-# SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:Heybob!23@localhost/rags'
 load_dotenv()
 os.environ['SQLALCHEMY_DATABASE_URL']
 api_key = os.environ["SQLALCHEMY_DATABASE_URL"]
 
-engine = create_engine(api_key)
+engine = create_engine(api_key, connect_args={"options": "-c timezone=utc"})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -25,49 +25,82 @@ import {
 } from '@chakra-ui/react';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { useAuthValue } from "../AuthContext"
-import { HamburgerIcon } from '@chakra-ui/icons';
-
-
+import { HamburgerIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons';
+import Loader from './Loader'
+import { useClipboard } from '@chakra-ui/react';
 
 const Chat = () => {
+    const { onCopy, value, setValue, hasCopied } = useClipboard("");
+
   const [messages, setMessages] = useState([]);
   const [prompt, setPrompt] = useState('')
   const [answer, setAnswer] = useState(null)
   const [vectorDB, setVectorDB] = useState('')
   const [vectorDBList, setVectorDBList] = useState([])
-  const [loading, setLoading] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [sources, setSources] = useState([])
   const [currentConversation, setCurrentConversation] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef();
-  const [user, setUser] = useState(null);
+  const messagesEndRef = useRef(null);
+  const [convoHistory, setConvoHistory] = useState([]);
 
   const { currentUser } = useAuthValue()
 
     useEffect(() => {
     axiosBaseUrl.get(`/databases/${currentUser.uid}`)
         .then((response) =>{
-        setVectorDBList(response.data)
+            setVectorDBList(response.data)
+        })
+    axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
+        .then((response) =>{
+            console.log("response.data: ", response.data)
+            setConvoHistory(response.data)
         })
     },[])
 
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        if (messages.length) scrollToBottom();
+    }, [messages]);
+
     const handleSelectRAG = (vectorDB) => {
         setVectorDB(vectorDB);
+        // Step 1: Filter the list
+        const filteredRag = convoHistory.filter(item => item.rag === vectorDB);
+        // Step 2: Sort the filtered list by 'created_at'
+        const sortedRag = filteredRag.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        // Step 3: Transform into the desired format
+        const convo = sortedRag.flatMap(item => [
+            { text: item.prompt, sender: 'user' },
+            { text: item.response, sender: 'llm', sources: item.sources }
+        ]);
+        setMessages(convo)
+        console.log("convo::: ", convo);
         onClose();
+      };
+
+
+      const handleCopy = (text) => {
+        const { onCopy } = useClipboard(text);
+        onCopy(); // This will copy the text
       };
     
 
   const handleSendMessage = () => {
-    
     // if (prompt.trim()) {
+    setLoading(true)
     axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
           .then((response) => {
             setAnswer(response.data.answer)
-            setLoading(null)
+            setLoading(false)
             setSources(response.data.sources)
-            setMessages([...messages, { text: prompt, sender: 'user'}, { text: response.data.answer, sender: 'llm'}]);
             const sauces = (response.data.sources).map(sauce => sauce.page_content)
-            axiosBaseUrl.post(`/convo`, 
+            setMessages([...messages, { text: prompt, sender: 'user'}, { text: response.data.answer, sender: 'llm', sources: sauces}]);
+            axiosBaseUrl.post(`/archive_message`, 
                 {
                     uid: String(currentUser.uid), 
                     rag: vectorDB, 
@@ -86,8 +119,6 @@ const Chat = () => {
             console.log(`llm error ${e}`)
             alert('Api screwed up')
           }) 
-
-        console.log(`end of method`)
       setPrompt('');
   };
 
@@ -133,37 +164,53 @@ const Chat = () => {
         
         <Box width="100%" overflowY="scroll">
           {messages.map((message, index) => (
-            <Box key={index} p={4} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
+                <Box key={index} p={4} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
                {message.sender === 'user' ? (
                 <Text textAlign='left' bg="blue.100" p={2} borderRadius="md">
                   {message.text}
                 </Text>
               ) : (
-                <Accordion allowToggle>
-                  <AccordionItem>
-                    <h2>
-                      <AccordionButton>
-                        <Box flex="1" textAlign="left">
-                          {message.text}
+                <Flex direction="column" alignItems="flex-end">
+                    <Flex alignItems="center">
+                        <Text flex="1" textAlign="left" onClick={()=> setValue(message.text)}>{message.text}</Text>
+                            <IconButton
+                            aria-label="Copy message"
+                            icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
+                            size="sm"
+                            onClick={() => onCopy(message.text)}
+                            variant="ghost"
+                            ml={2}
+                            />
+                    </Flex>
+                <Accordion allowToggle width="100%">
+                    <AccordionItem>
+                    <AccordionButton justifyContent="space-between">
+                        <Box flex="1" textAlign="right">
+                        Sources
                         </Box>
                         <AccordionIcon />
-                      </AccordionButton>
-                    </h2>
-                    
-                    {sources.map(sauce =>
-                        <AccordionPanel textAlign='left' pb={4}>
-                        {/* Replace this with actual source list */}
-                        PAGE {sauce.metadata.page + 1}: {sauce.page_content}
-                      </AccordionPanel>
-                    )}
-                    
-                  </AccordionItem>
+                    </AccordionButton>
+                    {
+                        message.sources && message.sources.length > 0 ?
+                        message.sources.map(sauce =>
+                            <AccordionPanel textAlign='left' pb={4}>
+                                {sauce}
+                            </AccordionPanel>
+                        ) : <AccordionPanel>No sources available</AccordionPanel>
+                    }
+                    </AccordionItem>
                 </Accordion>
+                </Flex>
               )}
             </Box>
           ))}
+          <div ref={messagesEndRef} />
         </Box>
         <Divider />
+        { loading ? 
+        <Loader />
+        :
+        <>
         <Input
           placeholder="Type a message..."
           value={prompt}
@@ -173,6 +220,9 @@ const Chat = () => {
         <Button colorScheme="blue" onClick={handleSendMessage}>
           Send
         </Button>
+        </>
+        }
+        
       </VStack>
     </Box>
   );
