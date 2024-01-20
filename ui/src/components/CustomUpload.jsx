@@ -51,13 +51,9 @@ function CustomUpload() {
     status: 'done',
     accept:'application/pdf',
     onChange (e) {
-      // console.log("e:::: ", e.file.originFileObj)
-      // const files = e.file.originFileObj
       let files = (e.fileList).map(object => object.originFileObj)
-      // let fileNames = (e.fileList).map(object => object.name);
       let fileSize = (e.fileList).map(object => object.size);
       setSelectedFiles(files);
-      // console.log("selectedFiles dragNdrop::: ", [...selectedFiles, ...file])
       let totalSize = 0;
       totalSize = fileSize.reduce((sum, number) => {
         return sum + number;

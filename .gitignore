@@ -13,3 +13,4 @@ ui/dist/
 llm/rags-venv/
 llm/venv
 llm/router/__pycache__
+llm/.env*
