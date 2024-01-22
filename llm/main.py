@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from rag import *
 from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
@@ -44,16 +44,6 @@ class Rag(BaseModel):
 class QueryRequest(BaseModel):
     uid: str
 
-@prefix_router.post('/test', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreatePost])
-def test_posts_sent(post_post:schemas.CreatePost, db:Session = Depends(get_db)):
-    new_post = models.Post(**post_post.dict())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    return [new_post]
-
-class QueryRequest(BaseModel):
-    uid: str
 
 @prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
 def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
@@ -94,12 +84,6 @@ def test_posts(request_body: Rag, db: Session = Depends(get_db)):
 
     return JSONResponse(content={"message": "Convo history deleted"})
 
-
-
-# @prefix_router.post('/query', response_model=List[schemas.CreatePost])
-# def test_posts(db: Session = Depends(get_db)):
-#     post = db.query(models.Post).all()
-#     return  post
 
 @prefix_router.post("/qa")
 async def read_question(item: Prompt):
@@ -148,13 +132,30 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
 @prefix_router.get("/databases/{userId}") 
 async def fetch_vector_databases(userId: str):
     print(f"checking DIRECTORY./rag_data/custom_db/{userId}")
-    # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     try:
         filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     except:
         filenames = []
     return sorted(filenames)
     
+
+@prefix_router.get("/sourcefiles/{userId}/{ragName}") 
+async def fetch_source_files(userId: str, ragName: str):
+    print(f"checking DIRECTORY./rag_data/data/{userId}/{ragName}")
+    try:
+        sourceFilenames = os.listdir(f"./rag_data/data/{userId}/{ragName}")
+    except:
+        sourceFilenames = []
+    return sourceFilenames
+    
+@prefix_router.get("/download/{userId}/{ragName}/{filename}")
+async def download_file(filename: str, ragName: str, userId: str):
+    file_path = f"./rag_data/data/{userId}/{ragName}/{filename}"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, headers={"Content-Disposition": "attachment; filename=" + os.path.basename(file_path)})
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
 
 @prefix_router.post("/delete") 
 async def delete_vector_database(item: Rag):

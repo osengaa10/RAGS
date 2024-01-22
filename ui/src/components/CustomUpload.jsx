@@ -1,32 +1,40 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom";
+import { saveAs } from 'file-saver'; // You might need to install file-saver package
 
-import Home from './Home';
 import './CustomUpload.css'
 import { axiosBaseUrl } from '../axiosBaseUrl'
 import {
   Box,
-  Input,
   keyframes,
-  Spinner,
-  Text
+  Text,
+  Flex,
+  useBreakpointValue,
+  IconButton
 } from '@chakra-ui/react'
 import { AutoComplete, Button } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
-import { message, Upload } from 'antd';
+import { InboxOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Upload } from 'antd';
 import { useAuthValue } from "../AuthContext"
+import Loader from "./Loader";
+import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
+
+
 const { Dragger } = Upload;
 
 function CustomUpload() {
   const [ragName, setRagName] = useState('')
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
-
   const [gradients, setGradients] = useState('radial(gray.100, yellow.100, pink.100)')
   const [vectorDBList, setVectorDBList] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
   const [uploadTimeEstimate, setUploadTimeEstimate] = useState(null)
+  const [sourceFiles, setSourceFiles] = useState([]);
+  const [pdfFileBlob, setPdfFileBlob] = useState();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fileName, setFileName] = useState(null);
   let navigate = useNavigate();
   const {currentUser} = useAuthValue()
 
@@ -67,6 +75,7 @@ function CustomUpload() {
     },
   };
 
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const animation = keyframes `
   to {
@@ -84,12 +93,37 @@ function CustomUpload() {
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
+    axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${option.label}`)
+      .then((response) => {
+        setSourceFiles(response.data);
+        console.log(`sourceFiles::: ${response.data}`)
+      })
   };
 
   const onChange = (data, option) => {
     setSearchedValue(data);
     setRagName(data)
     setSelectedOption(option); // to remove selected option when user types  something wich doesn't match with any option
+  };
+
+
+  const handleDownload = (fileName) => {
+    axiosBaseUrl.get(`/download/${currentUser.uid}/${ragName}/${fileName}`, {
+      responseType: 'blob',
+    })
+    .then((response) => {
+      // Create a new Blob object using the response data of the file
+      const fileBlob = new Blob([response.data], { type: 'application/pdf' });
+      // Use file-saver to save the blob as a file
+      // saveAs(fileBlob, fileName);
+      setPdfFileBlob(fileBlob)
+      setIsModalOpen(true);
+      setFileName(fileName);
+      console.log("Downloaded ", fileName);
+    })
+    .catch((error) => {
+      console.error('Error downloading file:', error);
+    });
   };
 
   const handleUpload = () => {
@@ -113,6 +147,7 @@ function CustomUpload() {
     .catch(error => {
       // Handle errors
       console.error('Error uploading file:', error);
+      setUploading(false)
     });
   }
 
@@ -151,9 +186,7 @@ function CustomUpload() {
       >
         Custom File Q&A
       </Text> 
-      
       <div>
-        {/* <input style={{padding: '20px'}} type="file" accept=".pdf" onChange={handleFileChange} multiple/> */}
         <Dragger {...props}>
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
@@ -176,13 +209,7 @@ function CustomUpload() {
           onChange={onChange}
         />
         {uploading ? 
-        <Spinner
-          thickness='4px'
-          speed='0.65s'
-          emptyColor='green.200'
-          color='pink.500'
-          size='xl'
-        /> 
+        <Loader />
         : 
         <>
         <Button style={{margin: '5px'}} onClick={() => handleUpload()} type="primary">
@@ -196,9 +223,7 @@ function CustomUpload() {
         <></>
         }
         </>
-      
-      }
-        
+      } 
       </div>
     </div>
     <br />
@@ -207,7 +232,26 @@ function CustomUpload() {
       :
       <></>
     }
-  
+    <Flex direction="column" align="center" m={4}>
+    <Text isTruncated bold maxWidth={isMobile ? "70%" : "90%"}>Knowledge base files</Text>
+        {sourceFiles.map((file, index) => (
+          <Flex key={index} w="full" justify="space-between" p={2} m={1}>
+            <Text isTruncated maxWidth={isMobile ? "70%" : "90%"}>{file}</Text>
+            <div>
+              <Button onClick={() => handleDownload(file)}>View PDF</Button>
+              {pdfFileBlob && 
+                <PDFViewerModal 
+                  pdfBlob={pdfFileBlob} 
+                  isOpen={isModalOpen} 
+                  onClose={() => setIsModalOpen(false)}
+                  fileName={fileName}
+                />}
+            </div>
+            {/* <PDFViewerModal pdfFile={pdfFileBlob} /> */}
+          </Flex>
+        ))}
+      </Flex>
+      
     </Box>
 
   )

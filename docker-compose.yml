@@ -42,7 +42,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /home/austin/postgres_data_volume:/bitnami/postgresql
     networks:
       - app-network
 
@@ -50,5 +50,3 @@ networks:
   app-network:
     driver: bridge
 
-volumes:
-  postgres_data:
