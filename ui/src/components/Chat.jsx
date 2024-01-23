@@ -41,6 +41,7 @@ const Chat = () => {
   const [sources, setSources] = useState([])
   const [currentConversation, setCurrentConversation] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [systemPrompt, setSystemPrompt] = useState('');
   const btnRef = useRef();
   const messagesEndRef = useRef(null);
   const [convoHistory, setConvoHistory] = useState([]);
@@ -68,20 +69,24 @@ const Chat = () => {
     }, [messages]);
 
     const handleSelectRAG = (vectorDB) => {
-        setVectorDB(vectorDB);
-        // Step 1: Filter the list
-        const filteredRag = convoHistory.filter(item => item.rag === vectorDB);
-        // Step 2: Sort the filtered list by 'created_at'
-        const sortedRag = filteredRag.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        // Step 3: Transform into the desired format
-        const convo = sortedRag.flatMap(item => [
-            { text: item.prompt, sender: 'user' },
-            { text: item.response, sender: 'llm', sources: item.sources }
-        ]);
-        setMessages(convo)
-        console.log("convo::: ", convo);
-        onClose();
-      };
+      setVectorDB(vectorDB);
+      // Step 1: Filter the list
+      const filteredRag = convoHistory.filter(item => item.rag === vectorDB);
+      // Step 2: Sort the filtered list by 'created_at'
+      const sortedRag = filteredRag.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      // Step 3: Transform into the desired format
+      const convo = sortedRag.flatMap(item => [
+          { text: item.prompt, sender: 'user' },
+          { text: item.response, sender: 'llm', sources: item.sources }
+      ]);
+      axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: vectorDB})
+        .then((response) => {
+          setSystemPrompt(response.data)
+      })
+      setMessages(convo)
+      console.log("convo::: ", convo);
+      onClose();
+    };
 
 
       const handleCopy = (text) => {
@@ -93,7 +98,8 @@ const Chat = () => {
   const handleSendMessage = () => {
     // if (prompt.trim()) {
     setLoading(true)
-    axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid})
+    console.log("systemPrompt::: ", systemPrompt)
+    axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid, system_prompt: systemPrompt})
           .then((response) => {
             setAnswer(response.data.answer)
             setLoading(false)
@@ -106,7 +112,8 @@ const Chat = () => {
                     rag: vectorDB, 
                     prompt: prompt, 
                     response: response.data.answer, 
-                    sources: sauces
+                    sources: sauces,
+                    system_prompt: systemPrompt
                 })
                 .then((res) => {
                     console.log(`response from db: ${res}`)

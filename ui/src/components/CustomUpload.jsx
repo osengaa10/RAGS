@@ -1,24 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { saveAs } from 'file-saver'; // You might need to install file-saver package
 
-import './CustomUpload.css'
-import { axiosBaseUrl } from '../axiosBaseUrl'
+import './CustomUpload.css';
+import { axiosBaseUrl } from '../axiosBaseUrl';
 import {
   Box,
   keyframes,
   Text,
   Flex,
   useBreakpointValue,
-  IconButton
-} from '@chakra-ui/react'
-import { AutoComplete, Button } from 'antd';
+  IconButton,
+  Input,
+  Textarea,
+  Button,
+  VStack,
+  HStack,
+  Divider
+} from '@chakra-ui/react';
 import { InboxOutlined, DownloadOutlined } from '@ant-design/icons';
-import { Upload } from 'antd';
-import { useAuthValue } from "../AuthContext"
+import { Upload, AutoComplete } from 'antd';
+import { useAuthValue } from "../AuthContext";
 import Loader from "./Loader";
 import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
-
 
 const { Dragger } = Upload;
 
@@ -26,7 +30,7 @@ function CustomUpload() {
   const [ragName, setRagName] = useState('')
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
-  const [gradients, setGradients] = useState('radial(gray.100, yellow.100, pink.100)')
+  const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
   const [vectorDBList, setVectorDBList] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
@@ -35,13 +39,15 @@ function CustomUpload() {
   const [pdfFileBlob, setPdfFileBlob] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState(null);
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [ragConfigs, setRagConfigs] = useState()
   let navigate = useNavigate();
   const {currentUser} = useAuthValue()
 
 
   const options = vectorDBList.map((item, index) => {
     return { label: item, value: String(index + 1) };
-});
+  });
 
   const dummyRequest = ({ file, onSuccess }) => {
     setTimeout(() => {
@@ -93,6 +99,10 @@ function CustomUpload() {
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
+    axiosBaseUrl.post(`/rag_configs/`, {user_id: currentUser.uid, input_directory: option.label})
+      .then((response) => {
+        setSystemPrompt(response.data)
+      })
     axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${option.label}`)
       .then((response) => {
         setSourceFiles(response.data);
@@ -128,27 +138,32 @@ function CustomUpload() {
 
   const handleUpload = () => {
     if (selectedFiles.length === 0 || ragName === '') {
-      alert('Select one or more files and name your RAG');
+      axiosBaseUrl.post('/save_rag_config', {uid: currentUser.uid, input_directory: ragName, system_prompt: systemPrompt})
+        .then((response) => {
+          console.log("saved the following system prompt:: ", systemPrompt);
+        })
       return;
+    } else {
+      setUploading(true)
+      const formData = new FormData();
+          selectedFiles.forEach((file, index) => {
+        formData.append(`files`, file);
+      });
+      formData.append(`input_directory`, ragName)
+      formData.append(`user_id`, currentUser.uid)
+      axiosBaseUrl.post('/chunk_and_embed', formData)
+      .then(response => {
+        // Handle the response from the server
+        setUploading(false)
+        navigate("/");
+      })
+      .catch(error => {
+        // Handle errors
+        console.error('Error uploading file:', error);
+        setUploading(false)
+      });
     }
-    setUploading(true)
-    const formData = new FormData();
-        selectedFiles.forEach((file, index) => {
-      formData.append(`files`, file);
-    });
-    formData.append(`input_directory`, ragName)
-    formData.append(`user_id`, currentUser.uid)
-    axiosBaseUrl.post('/chunk_and_embed', formData)
-    .then(response => {
-      // Handle the response from the server
-      setUploading(false)
-      navigate("/");
-    })
-    .catch(error => {
-      // Handle errors
-      console.error('Error uploading file:', error);
-      setUploading(false)
-    });
+
   }
 
 
@@ -173,89 +188,111 @@ function CustomUpload() {
   return (
     <Box
       h='calc(100vh)'
-      style={{overflow: 'auto'}}
-      bgGradient={gradients}
-      animation= {`${animation} 1s linear infinite`}
+      overflow='auto'
+      bgGradient='linear(to-r, blue.200, pink.200)'
+      p={10}
     >
-    <div style={{padding: '50px'}}>
-       <Text
-        bgColor='black'
-        bgClip='text'
-        fontSize='4xl'
-        fontWeight='extrabold'
-      >
-        Custom File Q&A
-      </Text> 
-      <div>
+      <VStack spacing={6} align="stretch">
+        <Text
+          color='gray.700'
+          fontSize='3xl'
+          fontWeight='bold'
+          textAlign='center'
+        >
+          Custom File Q&A
+        </Text>
+
+        <Flex justifyContent="center" alignItems="center">
+          <Text
+            color='gray.700'
+            fontSize='xl'
+            fontWeight='semibold'
+            mr={4}
+          >
+            Select knowledge base:
+          </Text>
+          <AutoComplete
+            value={searchedValue}
+            options={options}
+            placeholder="knowledge base"
+            // onChange={(e) => setSearchedValue(e.target.value)}
+            style={{width: 200}}
+            filterOption={(searchedValue, option) => 
+              option.label.toUpperCase().indexOf(searchedValue.toUpperCase()) !== -1
+            }
+            onSelect={onSelect}
+            onChange={onChange}
+          />
+          
+        </Flex>
+
+        <Textarea
+          placeholder="System prompt..."
+          value={systemPrompt}
+          onChange={(e) => setSystemPrompt(e.target.value)}
+          size='lg'
+        />
+
         <Dragger {...props}>
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
           <p className="ant-upload-text">Click or drag file to this area to upload</p>
           <p className="ant-upload-hint">
             Support for a single or bulk upload.
           </p>
         </Dragger>
-        <AutoComplete
-          value={searchedValue}
-          options={options}
-          autoFocus={false}
-          style={{width: 200}}
-          placeholder="knowledge base"
-          filterOption={(searchedValue, option) =>
-            option.label.toUpperCase().indexOf(searchedValue.toUpperCase()) !== -1
-          }
-          onSelect={onSelect}
-          onChange={onChange}
-        />
-        {uploading ? 
-        <Loader />
-        : 
-        <>
-        <Button style={{margin: '5px'}} onClick={() => handleUpload()} type="primary">
-        Submit
-        </Button> 
-        {ragName ?
-          <Button type="primary" style={{marginRight: '5px'}} onClick={() => handleDelete()} danger>
-          Delete
-          </Button>
-        :
-        <></>
-        }
-        </>
-      } 
-      </div>
-    </div>
-    <br />
-    { selectedFiles.length > 0 ?
-      <Text as='i'>*Estimated Time: {uploadTimeEstimate} mintue(s). This only needs to be done once.</Text>
-      :
-      <></>
-    }
-    <Flex direction="column" align="center" m={4}>
-    <Text isTruncated bold maxWidth={isMobile ? "70%" : "90%"}>Knowledge base files</Text>
-        {sourceFiles.map((file, index) => (
-          <Flex key={index} w="full" justify="space-between" p={2} m={1}>
-            <Text isTruncated maxWidth={isMobile ? "70%" : "90%"}>{file}</Text>
-            <div>
-              <Button onClick={() => handleDownload(file)}>View PDF</Button>
-              {pdfFileBlob && 
-                <PDFViewerModal 
-                  pdfBlob={pdfFileBlob} 
-                  isOpen={isModalOpen} 
-                  onClose={() => setIsModalOpen(false)}
-                  fileName={fileName}
-                />}
-            </div>
-            {/* <PDFViewerModal pdfFile={pdfFileBlob} /> */}
-          </Flex>
-        ))}
-      </Flex>
-      
-    </Box>
 
+        {uploading ? <Loader /> : (
+          <HStack spacing={4}>
+            <Button
+              onClick={handleUpload}
+              colorScheme='blue'
+              leftIcon={<DownloadOutlined />}
+            >
+              Submit
+            </Button>
+            {ragName && (
+              <Button
+                onClick={handleDelete}
+                colorScheme='red'
+              >
+                Delete
+              </Button>
+            )}
+          </HStack>
+        )}
+
+        {selectedFiles.length > 0 && (
+          <Text as='i'>
+            *Estimated Time: {uploadTimeEstimate} minute(s). This only needs to be done once.
+          </Text>
+        )}
+
+        <Divider />
+
+        <VStack spacing={4}>
+          <Text fontWeight='bold'>Knowledge base files</Text>
+          {sourceFiles.map((file, index) => (
+            <HStack key={index} justify="space-between">
+              <Text isTruncated>{file}</Text>
+              <Button onClick={() => handleDownload(file)} colorScheme='teal'>
+                View PDF
+              </Button>
+            </HStack>
+          ))}
+          {pdfFileBlob && (
+            <PDFViewerModal
+              pdfBlob={pdfFileBlob}
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              fileName={fileName}
+            />
+          )}
+        </VStack>
+      </VStack>
+    </Box>
   )
 }
 
 export default CustomUpload
-

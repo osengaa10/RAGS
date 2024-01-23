@@ -11,6 +11,8 @@ import json
 from configs import *
 from fastapi import APIRouter
 import models
+# from models import *
+from sqlalchemy.inspection import inspect
 from database import *
 from sqlalchemy import text 
 from sqlalchemy.orm import Session
@@ -36,6 +38,7 @@ class Prompt(BaseModel):
     query: str
     input_directory: str
     user_id: str
+    system_prompt: str
 
 class Rag(BaseModel):
     user_id: str
@@ -43,6 +46,18 @@ class Rag(BaseModel):
 
 class QueryRequest(BaseModel):
     uid: str
+
+class UserRagConfigsRequest(BaseModel):
+    uid: str
+    input_directory: str
+    system_prompt: str
+
+# Check if table exists and create if not
+if not inspect(engine).has_table(models.UserRagConfigs.__tablename__):
+    models.UserRagConfigs.__table__.create(bind=engine)
+    # Execute the ALTER TABLE command to add the unique constraint
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE user_rag_configs ADD UNIQUE (uid, rag)"))
 
 
 @prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
@@ -71,6 +86,25 @@ def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_
     db.refresh(new_convo)
     return [new_convo]
 
+@prefix_router.post("/rag_configs") 
+async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    rag_name = request_body.input_directory
+    sql_query = text("select system_prompt FROM user_rag_configs WHERE uid = :uid AND rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    system_prompt_row = result.fetchone()
+
+    # Check if a row was returned
+    if system_prompt_row is not None:
+        # Extract system_prompt value from the row
+        system_prompt = system_prompt_row[0]  # Assuming system_prompt is the first column
+        print(f"system_prompt::: {system_prompt}")
+        print(type(system_prompt))
+        return system_prompt  # Return the system_prompt value as a string
+    else:
+        return "No system prompt found for the given user and rag name."
+
+    
 
 @prefix_router.post('/delete_convo_history')
 def test_posts(request_body: Rag, db: Session = Depends(get_db)):
@@ -84,14 +118,38 @@ def test_posts(request_body: Rag, db: Session = Depends(get_db)):
 
     return JSONResponse(content={"message": "Convo history deleted"})
 
+@prefix_router.post('/save_rag_config')
+def save_rag_config(request_body: UserRagConfigsRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    system_prompt = request_body.system_prompt
+    rag_name = request_body.input_directory
+    sql_query = text("""
+                    INSERT INTO user_rag_configs (uid, rag, system_prompt)
+                    VALUES (:uid, :rag_name, :system_prompt)
+                    ON CONFLICT (uid, rag) 
+                    DO UPDATE SET system_prompt = EXCLUDED.system_prompt
+                    """
+                    )
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name, 'system_prompt': system_prompt})
+    db.commit()
+    return result
+
 
 @prefix_router.post("/qa")
-async def read_question(item: Prompt):
+async def read_question(item: Prompt, db: Session = Depends(get_db)):
     query = json.dumps(item.query)
-    if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
-        qa_chain = create_chain(item.user_id, item.input_directory)
-    else:
-        qa_chain = create_user_chain(item.user_id, item.input_directory)
+    uid = item.user_id
+    rag_name = item.input_directory
+    system_prompt = item.system_prompt
+
+    sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    sys_prompt = result.fetchone()
+    # if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
+    #     qa_chain = create_chain(item.user_id, item.input_directory)
+    # else:
+    #     qa_chain = create_user_chain(item.user_id, item.input_directory)
+    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []

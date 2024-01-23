@@ -20,6 +20,7 @@ class UserConvosBase(BaseModel):
     prompt: str
     sources: list
     response: str
+    system_prompt: str
 
     class Config:
         orm_mode = True
@@ -42,5 +43,17 @@ class UserConvoHistoryBase(BaseModel):
 
 
 class CreateUserConvoHistoryBase(UserConvosBase):
+    class Config:
+        orm_mode = True
+
+
+
+class UserRagConfigsBase(BaseModel):
+    # rag: str
+    system_prompt: str
+    class Config:
+        orm_mode = True
+
+class CreateUserRagConfigs(UserRagConfigsBase):
     class Config:
         orm_mode = True

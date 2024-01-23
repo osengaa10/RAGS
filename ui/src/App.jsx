@@ -9,15 +9,21 @@ import Login from './components/Login';
 import { auth } from './firebase';
 import { AuthProvider } from './AuthContext';
 import { onAuthStateChanged } from 'firebase/auth';
-
+import Loader from './components/Loader';
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setIsLoading(false);
     });
   }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   const router = createBrowserRouter(
     createRoutesFromElements(

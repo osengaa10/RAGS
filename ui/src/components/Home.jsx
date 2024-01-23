@@ -13,7 +13,7 @@ import Chat from './Chat';
 
 function Home() {
 
-  const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
+  const [gradients, setGradients] = useState('linear(to-r, blue.200, pink.200)')
 
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {
