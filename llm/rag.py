@@ -100,10 +100,10 @@ def create_chain(user_id, input_directory):
                                         verbose=True,
                                         memory=memory)
 
-def create_user_chain(user_id, input_directory):
+def create_user_chain(user_id, input_directory, system_prompt):
     """create the chain to answer questions"""
 
-    # PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing {prompt_specialist}.
+    # PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing oncology.
     # Always anwser the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. 
     # The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. 
     # If you don't know the answer to a question, please don't share false information.
@@ -113,12 +113,26 @@ def create_user_chain(user_id, input_directory):
     # instruction = """CONTEXT:/n/n {context}/n
 
     # Question: {question}"""
+    PARAMETERIZED_SYSTEM_PROMPT = ''
+    if system_prompt == "":
+        PARAMETERIZED_SYSTEM_PROMPT = """You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
+        If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please do not share false information.
+        """
+    else:
+        print(f"create_user_chain system prompt:: {system_prompt}")
+        PARAMETERIZED_SYSTEM_PROMPT = system_prompt
 
+    PARAMETERIZED_SYSTEM_PROMPT = """
 
-    PARAMETERIZED_SYSTEM_PROMPT = """You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
+    You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
     If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please do not share false information.
+    
     """
-
+    
+    # user_system_prompt = system_prompt
+    # PARAMETERIZED_SYSTEM_PROMPT = """
+    # {user_system_prompt}
+    # """
     instruction = """CONTEXT:/n/n {context}/n
 
     Question: {question}"""

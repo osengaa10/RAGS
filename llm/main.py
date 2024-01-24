@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse, FileResponse
 from rag import *
 from chunk_and_embed import chunk_and_embed
 from pydantic import BaseModel
@@ -9,12 +10,20 @@ from typing import List
 import json
 from configs import *
 from fastapi import APIRouter
+import models
+# from models import *
+from sqlalchemy.inspection import inspect
+from database import *
+from sqlalchemy import text 
+from sqlalchemy.orm import Session
+from starlette import status
+import schemas
+import router.posts
 
-
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 origins = ["*"]
-
 prefix_router = APIRouter(prefix="/api")
 
 
@@ -29,19 +38,118 @@ class Prompt(BaseModel):
     query: str
     input_directory: str
     user_id: str
+    system_prompt: str
 
 class Rag(BaseModel):
     user_id: str
     input_directory: str
 
+class QueryRequest(BaseModel):
+    uid: str
+
+class UserRagConfigsRequest(BaseModel):
+    uid: str
+    input_directory: str
+    system_prompt: str
+
+# Check if table exists and create if not
+if not inspect(engine).has_table(models.UserRagConfigs.__tablename__):
+    models.UserRagConfigs.__table__.create(bind=engine)
+    # Execute the ALTER TABLE command to add the unique constraint
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE user_rag_configs ADD UNIQUE (uid, rag)"))
+
+
+@prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
+def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    sql_query = text("SELECT rag,prompt,response,sources,created_at FROM user_convos WHERE uid = :uid")
+    result = db.execute(sql_query, {'uid': uid})
+    posts = result.fetchall()
+    formatted_posts = []
+    for post in posts:
+        formatted_post = {
+            "rag": post.rag,
+            "prompt": post.prompt,
+            "response": post.response,
+            "sources": post.sources,
+            "created_at": post.created_at.isoformat() if post.created_at else None
+        }
+        formatted_posts.append(formatted_post)
+    return formatted_posts
+
+@prefix_router.post('/archive_message', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreateUserConvo])
+def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_db)):
+    new_convo = models.UserConvos(**post_post.dict())
+    db.add(new_convo)
+    db.commit()
+    db.refresh(new_convo)
+    return [new_convo]
+
+@prefix_router.post("/rag_configs") 
+async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    rag_name = request_body.input_directory
+    sql_query = text("select system_prompt FROM user_rag_configs WHERE uid = :uid AND rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    system_prompt_row = result.fetchone()
+
+    # Check if a row was returned
+    if system_prompt_row is not None:
+        # Extract system_prompt value from the row
+        system_prompt = system_prompt_row[0]  # Assuming system_prompt is the first column
+        print(f"system_prompt::: {system_prompt}")
+        print(type(system_prompt))
+        return system_prompt  # Return the system_prompt value as a string
+    else:
+        return "No system prompt found for the given user and rag name."
+
+    
+
+@prefix_router.post('/delete_convo_history')
+def test_posts(request_body: Rag, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    rag_name = request_body.input_directory
+
+    sql_query = text("DELETE FROM user_convos WHERE uid = :uid AND rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    # posts = result.fetchall()
+    db.commit()
+
+    return JSONResponse(content={"message": "Convo history deleted"})
+
+@prefix_router.post('/save_rag_config')
+def save_rag_config(request_body: UserRagConfigsRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    system_prompt = request_body.system_prompt
+    rag_name = request_body.input_directory
+    sql_query = text("""
+                    INSERT INTO user_rag_configs (uid, rag, system_prompt)
+                    VALUES (:uid, :rag_name, :system_prompt)
+                    ON CONFLICT (uid, rag) 
+                    DO UPDATE SET system_prompt = EXCLUDED.system_prompt
+                    """
+                    )
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name, 'system_prompt': system_prompt})
+    db.commit()
+    return result
+
 
 @prefix_router.post("/qa")
-async def read_question(item: Prompt):
+async def read_question(item: Prompt, db: Session = Depends(get_db)):
     query = json.dumps(item.query)
-    if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
-        qa_chain = create_chain(item.user_id, item.input_directory)
-    else:
-        qa_chain = create_user_chain(item.user_id, item.input_directory)
+    uid = item.user_id
+    rag_name = item.input_directory
+    system_prompt = item.system_prompt
+
+    sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
+    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    sys_prompt = result.fetchone()
+    # if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
+    #     qa_chain = create_chain(item.user_id, item.input_directory)
+    # else:
+    #     qa_chain = create_user_chain(item.user_id, item.input_directory)
+    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
@@ -82,13 +190,30 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
 @prefix_router.get("/databases/{userId}") 
 async def fetch_vector_databases(userId: str):
     print(f"checking DIRECTORY./rag_data/custom_db/{userId}")
-    # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     try:
         filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     except:
         filenames = []
     return sorted(filenames)
     
+
+@prefix_router.get("/sourcefiles/{userId}/{ragName}") 
+async def fetch_source_files(userId: str, ragName: str):
+    print(f"checking DIRECTORY./rag_data/data/{userId}/{ragName}")
+    try:
+        sourceFilenames = os.listdir(f"./rag_data/data/{userId}/{ragName}")
+    except:
+        sourceFilenames = []
+    return sourceFilenames
+    
+@prefix_router.get("/download/{userId}/{ragName}/{filename}")
+async def download_file(filename: str, ragName: str, userId: str):
+    file_path = f"./rag_data/data/{userId}/{ragName}/{filename}"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, headers={"Content-Disposition": "attachment; filename=" + os.path.basename(file_path)})
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
 
 @prefix_router.post("/delete") 
 async def delete_vector_database(item: Rag):
