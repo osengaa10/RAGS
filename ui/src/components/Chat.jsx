@@ -133,7 +133,8 @@ const Chat = () => {
   const maxHeight = useBreakpointValue({ base: '60vh', md: '300px' });
 
   return (
-    <Box width="100%" height="100%" bg="gray.100" p={4} borderRadius="lg" boxShadow="md">
+    // <Box width="100%" height="100%" bg="#fffff0" p={4} borderRadius="lg" boxShadow="md">
+    <>
        <Flex justifyContent="space-between" alignItems="center">
         <IconButton
           ref={btnRef}
@@ -171,15 +172,16 @@ const Chat = () => {
         
         <Box width="100%" overflowY="scroll">
           {messages.map((message, index) => (
-                <Box key={index} p={4} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
+                <Box key={index} p={2} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
                {message.sender === 'user' ? (
-                <Text textAlign='left' bg="blue.100" p={2} borderRadius="md">
+                <Text textAlign='left' bg="blue.100" borderWidth="1px" borderColor="blue.200" boxShadow="md" p={2} borderRadius="md">
                   {message.text}
                 </Text>
               ) : (
                 <Flex direction="column" alignItems="flex-end">
-                    <Flex alignItems="center">
-                        <Text flex="1" textAlign="left" onClick={()=> setValue(message.text)}>{message.text}</Text>
+                  <Box boxShadow="md" borderWidth="1px" borderColor="gray.200" borderRadius='md' p={2}>
+                  <Flex alignItems="center">
+                        <Text flex="1"  textAlign="left" borderRadius="md" onClick={()=> setValue(message.text)}>{message.text}</Text>
                             <IconButton
                             aria-label="Copy message"
                             icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
@@ -189,14 +191,17 @@ const Chat = () => {
                             ml={2}
                             />
                     </Flex>
+                    
+                    
                 <Accordion allowToggle width="100%">
                     <AccordionItem>
                     <AccordionButton justifyContent="space-between">
-                        <Box flex="1" textAlign="right">
+                        <Box flex="1" borderRadius='md' textAlign="right">
                         Sources
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
+                    
                     {
                         message.sources && message.sources.length > 0 ?
                         message.sources.map(sauce =>
@@ -207,6 +212,7 @@ const Chat = () => {
                     }
                     </AccordionItem>
                 </Accordion>
+                </Box>
                 </Flex>
               )}
             </Box>
@@ -231,7 +237,7 @@ const Chat = () => {
         }
         
       </VStack>
-    </Box>
+    </>
   );
 };
 

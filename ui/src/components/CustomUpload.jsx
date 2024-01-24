@@ -99,7 +99,7 @@ function CustomUpload() {
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
-    axiosBaseUrl.post(`/rag_configs/`, {user_id: currentUser.uid, input_directory: option.label})
+    axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
       .then((response) => {
         setSystemPrompt(response.data)
       })
@@ -189,7 +189,8 @@ function CustomUpload() {
     <Box
       h='calc(100vh)'
       overflow='auto'
-      bgGradient='linear(to-r, blue.200, pink.200)'
+      // bgGradient='radial(gray.100, gray.200, gray.300)'
+      bg="#fffff8"
       p={10}
     >
       <VStack spacing={6} align="stretch">

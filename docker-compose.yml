@@ -36,15 +36,16 @@ services:
       retries: 5
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_DB: rags
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - /home/austin/postgres_data_volume:/bitnami/postgresql
+      - 'postgresql_data:/bitnami/postgresql'
     networks:
       - app-network
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+
+volumes:
+  postgresql_data:
+    driver: local
 
 networks:
   app-network:

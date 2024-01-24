@@ -13,7 +13,7 @@ import Chat from './Chat';
 
 function Home() {
 
-  const [gradients, setGradients] = useState('linear(to-r, blue.200, pink.200)')
+  const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
 
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {
@@ -42,7 +42,8 @@ function Home() {
     <Box
       h='calc(100vh)'
       style={{overflow: 'auto'}}
-      bgGradient={gradients}
+      // bgGradient={gradients}
+      bg="#fffff8"
       color="black"
       animation= {`${animation} 1s linear infinite`}
     >
@@ -51,7 +52,8 @@ function Home() {
         bgColor='black'
         bgClip='text'
         fontSize='4xl'
-        fontWeight='extrabold'
+        // as='abbr'
+        // fontWeight='extrabold'
       >
         Ask a question
       </Text> 
