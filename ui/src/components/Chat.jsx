@@ -28,7 +28,7 @@ import { useAuthValue } from "../AuthContext"
 import { HamburgerIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons';
 import Loader from './Loader'
 import { useClipboard } from '@chakra-ui/react';
-
+import './Chat.css'
 const Chat = () => {
     const { onCopy, value, setValue, hasCopied } = useClipboard("");
 
@@ -55,7 +55,6 @@ const Chat = () => {
         })
     axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
         .then((response) =>{
-            console.log("response.data: ", response.data)
             setConvoHistory(response.data)
         })
     },[])
@@ -133,9 +132,8 @@ const Chat = () => {
   const maxHeight = useBreakpointValue({ base: '60vh', md: '300px' });
 
   return (
-    // <Box width="100%" height="100%" bg="#fffff0" p={4} borderRadius="lg" boxShadow="md">
     <>
-       <Flex justifyContent="space-between" alignItems="center">
+       <Flex justifyContent="space-between" alignItems="center" className="chatContainer">
         <IconButton
           ref={btnRef}
           icon={<HamburgerIcon />}
@@ -143,7 +141,7 @@ const Chat = () => {
           variant="outline"
           m={2}
         />
-        <Heading size="md" mr={2}>{vectorDB}</Heading>
+        <Heading as="mark" size="md" mr={2}>{vectorDB}</Heading>
       </Flex>
       <Drawer isOpen={isOpen} placement="left" onClose={onClose} finalFocusRef={btnRef}>
         <DrawerOverlay />
@@ -168,18 +166,19 @@ const Chat = () => {
           </DrawerBody>
         </DrawerContent>
       </Drawer>
-      <VStack spacing={4}>
+      <VStack spacing={4} >
         
-        <Box width="100%" overflowY="scroll">
+        <Box width="100%" textAlign="left" overflowY="scroll" className="chatContainer">
           {messages.map((message, index) => (
-                <Box key={index} p={2} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
+                <Box key={index} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'} >
                {message.sender === 'user' ? (
-                <Text textAlign='left' bg="blue.100" borderWidth="1px" borderColor="blue.200" boxShadow="md" p={2} borderRadius="md">
+                <Text fontSize="xl" as="b"  style={{ textAlignLast: "left"}}>
                   {message.text}
                 </Text>
               ) : (
+
                 <Flex direction="column" alignItems="flex-end">
-                  <Box boxShadow="md" borderWidth="1px" borderColor="gray.200" borderRadius='md' p={2}>
+                  {/* <Box boxShadow="md" borderWidth="1px" borderColor="gray.200" borderRadius='md' p={2}> */}
                   <Flex alignItems="center">
                         <Text flex="1"  textAlign="left" borderRadius="md" onClick={()=> setValue(message.text)}>{message.text}</Text>
                             <IconButton
@@ -197,7 +196,7 @@ const Chat = () => {
                     <AccordionItem>
                     <AccordionButton justifyContent="space-between">
                         <Box flex="1" borderRadius='md' textAlign="right">
-                        Sources
+                        <Text as="mark">Sources</Text>
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
@@ -212,7 +211,7 @@ const Chat = () => {
                     }
                     </AccordionItem>
                 </Accordion>
-                </Box>
+                {/* </Box> */}
                 </Flex>
               )}
             </Box>

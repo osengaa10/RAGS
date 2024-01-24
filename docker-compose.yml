@@ -41,7 +41,10 @@ services:
     networks:
       - app-network
     environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - POSTGRES_DB=rags
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - ALLOW_EMPTY_PASSWORD=no
 
 volumes:
   postgresql_data:
