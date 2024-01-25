@@ -23,12 +23,3 @@ def get_db():
         db.close()
 
 
-# # Check if table exists and create if not
-# if not engine.dialect.has_table(engine, UserRagConfigs.__tablename__):
-#     UserRagConfigs.__table__.create(bind=engine)
-#     # Add the unique constraint
-#     with engine.connect() as conn:
-#         conn.execute(text("ALTER TABLE user_rag_configs ADD UNIQUE (uid, rag)"))
-
-
-

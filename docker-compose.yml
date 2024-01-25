@@ -4,8 +4,8 @@ services:
   frontend:
     image: intergalactictrash/rags-frontend
     build: ./ui
-    ports:
-      - "8080:80"
+    # ports:
+    #   - "8080:80"
     depends_on:
       - backend
     networks:
@@ -15,8 +15,8 @@ services:
     image: intergalactictrash/rags-backend
     build: ./llm
     # command: ["dockerize", "-wait", "tcp://db:5432", "-timeout", "60s", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
     volumes:
       - /home/austin/rag_data:/app/rag_data
     depends_on:
@@ -34,14 +34,31 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
     networks:
       - app-network
     environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
+      POSTGRES_DB: rags
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+    volumes:
+      - /etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /etc/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - /etc/nginx/sites-available:/etc/nginx/sites-available
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
 
 volumes:
   postgresql_data:
