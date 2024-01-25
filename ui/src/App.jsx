@@ -7,18 +7,24 @@ import Home from './components/Home';
 import Signup from './components/Signup';
 import Login from './components/Login';
 import { auth } from './firebase';
-import { AuthProvider } from './AuthContext';
+import { AuthProvider, useAuthValue } from './AuthContext';
 import { onAuthStateChanged } from 'firebase/auth';
 import Loader from './components/Loader';
+import { axiosBaseUrl } from './axiosBaseUrl';
+// const { isPrivacyMode, setIsPrivacyMode } = useAuthValue()
+
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("before onAuthStateChanged")
     onAuthStateChanged(auth, (user) => {
+      console.log("user inside onAuthStateChanged::: ", user)
       setCurrentUser(user);
       setIsLoading(false);
-    });
+    });    
+    console.log("after onAuthStateChanged")
   }, []);
 
   if (isLoading) {

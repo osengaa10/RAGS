@@ -11,6 +11,7 @@ import { auth } from '../firebase';
 import Chat from './Chat';
 import { useAuthValue } from "../AuthContext"
 import PrivacyLoader from './PrivacyLoader';
+import { axiosBaseUrl } from '../axiosBaseUrl';
 
 function Home() {
   const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
@@ -23,7 +24,10 @@ function Home() {
           // User is signed in, see docs for a list of available properties
           // https://firebase.google.com/docs/reference/js/firebase.User
           const uid = user.uid;
-          // ...
+          axiosBaseUrl.post('/is_private', {user_id: currentUser.uid})
+            .then((response) => {
+            setIsPrivacyMode(response.data.privacy)
+          })
           console.log("uid", uid)
         } else {
           // User is signed out
