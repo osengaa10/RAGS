@@ -36,6 +36,7 @@ class UserConvoHistoryBase(BaseModel):
     prompt: str
     sources: list
     response: str
+    system_prompt: str
     created_at: str
 
     class Config:

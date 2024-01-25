@@ -1,18 +1,19 @@
-import React, {useContext} from 'react'
+import React, {useContext,useState} from 'react'
 
 const AuthContext = React.createContext()
 
 export function AuthProvider({children, value}) {
 
-  // const [userSession, setUserSession] = useState("this is some global state");
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
-  // const value = {
-  //   userSession,
-  //   setUserSession, // Provide a way to update the userSession
-  // };
+  const contextValue = {
+    ...value,
+    isPrivacyMode,
+    setIsPrivacyMode
+  };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

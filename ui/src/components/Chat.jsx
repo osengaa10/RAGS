@@ -22,16 +22,23 @@ import {
     AccordionButton,
     AccordionPanel,
     AccordionIcon,
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    PopoverArrow,
+    PopoverCloseButton,
+    PopoverHeader,
+    PopoverBody,
+    Tooltip
 } from '@chakra-ui/react';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { useAuthValue } from "../AuthContext"
-import { HamburgerIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons';
+import { HamburgerIcon, CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
 import Loader from './Loader'
 import { useClipboard } from '@chakra-ui/react';
 
 const Chat = () => {
-    const { onCopy, value, setValue, hasCopied } = useClipboard("");
-
+  const { onCopy, value, setValue, hasCopied } = useClipboard("");
   const [messages, setMessages] = useState([]);
   const [prompt, setPrompt] = useState('')
   const [answer, setAnswer] = useState(null)
@@ -40,24 +47,25 @@ const Chat = () => {
   const [loading, setLoading] = useState(false)
   const [sources, setSources] = useState([])
   const [currentConversation, setCurrentConversation] = useState('');
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
   const [systemPrompt, setSystemPrompt] = useState('');
   const btnRef = useRef();
   const messagesEndRef = useRef(null);
   const [convoHistory, setConvoHistory] = useState([]);
-
-  const { currentUser } = useAuthValue()
+  
+  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
 
     useEffect(() => {
-    axiosBaseUrl.get(`/databases/${currentUser.uid}`)
+      axiosBaseUrl.get(`/databases/${currentUser.uid}`)
+          .then((response) =>{
+              setVectorDBList(response.data)
+          })
+      if(!isPrivacyMode) {
+        axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
         .then((response) =>{
-            setVectorDBList(response.data)
-        })
-    axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
-        .then((response) =>{
-            console.log("response.data: ", response.data)
             setConvoHistory(response.data)
         })
+      }
     },[])
 
     const scrollToBottom = () => {
@@ -77,14 +85,13 @@ const Chat = () => {
       // Step 3: Transform into the desired format
       const convo = sortedRag.flatMap(item => [
           { text: item.prompt, sender: 'user' },
-          { text: item.response, sender: 'llm', sources: item.sources }
+          { text: item.response, sender: 'llm', sources: item.sources, system_prompt: item.system_prompt }
       ]);
       axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: vectorDB})
         .then((response) => {
           setSystemPrompt(response.data)
       })
       setMessages(convo)
-      console.log("convo::: ", convo);
       onClose();
     };
 
@@ -105,8 +112,9 @@ const Chat = () => {
             setLoading(false)
             setSources(response.data.sources)
             const sauces = (response.data.sources).map(sauce => sauce.page_content)
-            setMessages([...messages, { text: prompt, sender: 'user'}, { text: response.data.answer, sender: 'llm', sources: sauces}]);
-            axiosBaseUrl.post(`/archive_message`, 
+            setMessages([...messages, { text: prompt, sender: 'user', system_prompt: systemPrompt}, { text: response.data.answer, sender: 'llm', sources: sauces}]);
+            if(!isPrivacyMode) {
+              axiosBaseUrl.post(`/archive_message`, 
                 {
                     uid: String(currentUser.uid), 
                     rag: vectorDB, 
@@ -121,6 +129,8 @@ const Chat = () => {
                 .catch((err) => {
                     console.log(`convo error ${err}`)
                 })
+            }
+            
           })
           .catch((e) => {
             console.log(`llm error ${e}`)
@@ -133,7 +143,6 @@ const Chat = () => {
   const maxHeight = useBreakpointValue({ base: '60vh', md: '300px' });
 
   return (
-    // <Box width="100%" height="100%" bg="#fffff0" p={4} borderRadius="lg" boxShadow="md">
     <>
        <Flex justifyContent="space-between" alignItems="center">
         <IconButton
@@ -149,7 +158,7 @@ const Chat = () => {
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Choose a Conversation</DrawerHeader>
+          <DrawerHeader>Knowledge bases</DrawerHeader>
           <DrawerBody>
             {vectorDBList.map((vDB) => (
               <Button
@@ -182,14 +191,41 @@ const Chat = () => {
                   <Box boxShadow="md" borderWidth="1px" borderColor="gray.200" borderRadius='md' p={2}>
                   <Flex alignItems="center">
                         <Text flex="1"  textAlign="left" borderRadius="md" onClick={()=> setValue(message.text)}>{message.text}</Text>
+                        <Flex direction="column">
+                          <IconButton
+                              aria-label="Copy message"
+                              icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
+                              size="sm"
+                              onClick={() => onCopy(message.text)}
+                              variant="ghost"
+                              ml={2}
+                              />
+                               
+                            <Popover>
+                            <Tooltip label="View system prompt for this response" hasArrow>
+                            <Box display="inline-block">
+                            <PopoverTrigger>
                             <IconButton
-                            aria-label="Copy message"
-                            icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
-                            size="sm"
-                            onClick={() => onCopy(message.text)}
-                            variant="ghost"
-                            ml={2}
-                            />
+                                  aria-label="View system prompt"
+                                  icon={<QuestionOutlineIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  ml={2}
+                                />
+                           
+                            </PopoverTrigger>
+                            </Box>
+                            </Tooltip>
+                            <PopoverContent>
+                                <PopoverArrow />
+                                <PopoverCloseButton />
+                                <PopoverHeader>System Prompt:</PopoverHeader>
+                                <PopoverBody>{message.system_prompt}</PopoverBody>
+                            </PopoverContent>
+                          </Popover>
+                         
+                        </Flex>
+                            
                     </Flex>
                     
                     

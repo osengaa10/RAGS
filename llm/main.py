@@ -52,6 +52,10 @@ class UserRagConfigsRequest(BaseModel):
     input_directory: str
     system_prompt: str
 
+class Privacy(BaseModel):
+    user_id: str
+
+
 # Check if table exists and create if not
 if not inspect(engine).has_table(models.UserRagConfigs.__tablename__):
     models.UserRagConfigs.__table__.create(bind=engine)
@@ -59,11 +63,15 @@ if not inspect(engine).has_table(models.UserRagConfigs.__tablename__):
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE user_rag_configs ADD UNIQUE (uid, rag)"))
 
+# Check if table exists and create if not
+if not inspect(engine).has_table(models.PrivateUsers.__tablename__):
+    models.UserRagConfigs.__table__.create(bind=engine)
+
 
 @prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
 def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
     uid = request_body.uid
-    sql_query = text("SELECT rag,prompt,response,sources,created_at FROM user_convos WHERE uid = :uid")
+    sql_query = text("SELECT rag,prompt,response,sources,system_prompt, created_at FROM user_convos WHERE uid = :uid")
     result = db.execute(sql_query, {'uid': uid})
     posts = result.fetchall()
     formatted_posts = []
@@ -73,10 +81,12 @@ def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
             "prompt": post.prompt,
             "response": post.response,
             "sources": post.sources,
+            "system_prompt": post.system_prompt,
             "created_at": post.created_at.isoformat() if post.created_at else None
         }
         formatted_posts.append(formatted_post)
     return formatted_posts
+
 
 @prefix_router.post('/archive_message', status_code=status.HTTP_201_CREATED, response_model=List[schemas.CreateUserConvo])
 def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_db)):
@@ -86,6 +96,7 @@ def test_posts_sent(post_post:schemas.CreateUserConvo, db:Session = Depends(get_
     db.refresh(new_convo)
     return [new_convo]
 
+
 @prefix_router.post("/rag_configs") 
 async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
     uid = request_body.user_id
@@ -93,7 +104,6 @@ async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
     sql_query = text("select system_prompt FROM user_rag_configs WHERE uid = :uid AND rag = :rag_name")
     result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
     system_prompt_row = result.fetchone()
-
     # Check if a row was returned
     if system_prompt_row is not None:
         # Extract system_prompt value from the row
@@ -104,7 +114,31 @@ async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
     else:
         return "No system prompt found for the given user and rag name."
 
+
+@prefix_router.post("/set_privacy_flag") 
+async def set_privacy_flag(request_body: Privacy, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    sql_query = text("""
+                INSERT INTO private_users (uid)
+                VALUES (:uid)
+                ON CONFLICT (uid) 
+                DO UPDATE SET uid = EXCLUDED.uid
+                """
+                )
+    result = db.execute(sql_query, {'uid': uid})
+    db.commit()
+    return "privacy mode set"
     
+@prefix_router.post("/is_private") 
+async def set_privacy_flag(request_body: Privacy, db: Session = Depends(get_db)):
+    uid = request_body.user_id
+    sql_query = text("select uid FROM private_users WHERE uid = :uid")
+
+    result = db.execute(sql_query, {'uid': uid})
+    is_private = result.fetchone()
+    return {"privacy": bool(is_private)}
+
+    # return {"privacy": is_private}
 
 @prefix_router.post('/delete_convo_history')
 def test_posts(request_body: Rag, db: Session = Depends(get_db)):
@@ -113,7 +147,6 @@ def test_posts(request_body: Rag, db: Session = Depends(get_db)):
 
     sql_query = text("DELETE FROM user_convos WHERE uid = :uid AND rag = :rag_name")
     result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
-    # posts = result.fetchall()
     db.commit()
 
     return JSONResponse(content={"message": "Convo history deleted"})
@@ -144,11 +177,7 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
 
     sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
     result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
-    sys_prompt = result.fetchone()
-    # if item.user_id == "uLlf51AUjehmXndE7HiUB0W3Fvg2":
-    #     qa_chain = create_chain(item.user_id, item.input_directory)
-    # else:
-    #     qa_chain = create_user_chain(item.user_id, item.input_directory)
+    system_prompt = result.fetchone()
     qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
@@ -167,7 +196,7 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
 
 
 @prefix_router.post("/chunk_and_embed")
-async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...)):
+async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...), is_privacy: bool = Form(...)):
     error = ''
     for file in files:
         try:
@@ -182,7 +211,7 @@ async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directo
         finally:
             file.file.close()
     print(f"ERRORRRRRRRR::: {error}")
-    return chunk_and_embed(user_id, input_directory)
+    return chunk_and_embed(user_id, input_directory, is_privacy)
 
 
 

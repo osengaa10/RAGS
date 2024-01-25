@@ -3,15 +3,17 @@ import '../App.css'
 import {
   Box,
   keyframes,
-  Text
+  Text,
+  Flex
 } from '@chakra-ui/react'
-import PromptAndResponse from './PrompAndResponse';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from '../firebase';
 import Chat from './Chat';
-
+import { useAuthValue } from "../AuthContext"
+import PrivacyLoader from './PrivacyLoader';
 
 function Home() {
+  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
 
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
 
@@ -28,6 +30,7 @@ function Home() {
           // ...
           console.log("user is logged out")
         }
+
       });
      
 }, [])
@@ -48,15 +51,37 @@ function Home() {
       animation= {`${animation} 1s linear infinite`}
     >
     <div style={{padding: '10px'}}>
-       <Text
-        bgColor='black'
-        bgClip='text'
-        fontSize='4xl'
-        // as='abbr'
-        // fontWeight='extrabold'
-      >
-        Ask a question
-      </Text> 
+      {isPrivacyMode ?
+        <Flex direction="row" justifyContent="center" alignItems="center" >
+        <Text
+          bgColor='black'
+          bgClip='text'
+          fontSize='4xl'
+          style={{margin: '0px'}}
+        >
+          Privacy M
+        </Text> 
+        <PrivacyLoader/>
+        <Text
+          bgColor='black'
+          bgClip='text'
+          fontSize='4xl'
+          style={{margin: '0px'}}
+        >
+          de
+        </Text> 
+      </Flex>
+      :
+      <Text
+      bgColor='black'
+      bgClip='text'
+      fontSize='4xl'
+    >
+      Ask a question
+    </Text>
+      }
+      
+        
             
       <Chat />
     </div>

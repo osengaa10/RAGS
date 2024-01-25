@@ -23,7 +23,7 @@ import { Upload, AutoComplete } from 'antd';
 import { useAuthValue } from "../AuthContext";
 import Loader from "./Loader";
 import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
-
+import PrivacyLoader from './PrivacyLoader';
 const { Dragger } = Upload;
 
 function CustomUpload() {
@@ -42,8 +42,7 @@ function CustomUpload() {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [ragConfigs, setRagConfigs] = useState()
   let navigate = useNavigate();
-  const {currentUser} = useAuthValue()
-
+  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
 
   const options = vectorDBList.map((item, index) => {
     return { label: item, value: String(index + 1) };
@@ -137,7 +136,7 @@ function CustomUpload() {
   };
 
   const handleUpload = () => {
-    if (selectedFiles.length === 0 || ragName === '') {
+    if (selectedFiles.length === 0 && ragName !=='' && !isPrivacyMode) {
       axiosBaseUrl.post('/save_rag_config', {uid: currentUser.uid, input_directory: ragName, system_prompt: systemPrompt})
         .then((response) => {
           console.log("saved the following system prompt:: ", systemPrompt);
@@ -151,6 +150,7 @@ function CustomUpload() {
       });
       formData.append(`input_directory`, ragName)
       formData.append(`user_id`, currentUser.uid)
+      formData.append(`is_privacy`, isPrivacyMode)
       axiosBaseUrl.post('/chunk_and_embed', formData)
       .then(response => {
         // Handle the response from the server

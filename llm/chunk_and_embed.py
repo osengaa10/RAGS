@@ -27,7 +27,7 @@ import configs
 ################################################################################
 # split documents into chunks, create embeddings, store embeddings in chromaDB #
 ################################################################################
-def chunk_and_embed(user_id, input_directory):
+def chunk_and_embed(user_id, input_directory, is_privacy):
     """split documents into chunks, create embeddings, store embeddings in chromaDB"""
     chunk_size = 1000
     chunk_overlap=200
@@ -58,6 +58,38 @@ def chunk_and_embed(user_id, input_directory):
 
     files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
 
+    if not is_privacy:
+        for file in files:
+            src_file_path = os.path.join(src_dir, file)
+            dst_file_path = os.path.join(dst_dir, file)
+            shutil.move(src_file_path, dst_file_path)
+    else:
+        for file in files:
+            src_file_path = os.path.join(src_dir, file)
+            os.remove(src_file_path)
+
+
+
+
+    print(f"Moved {len(files)} files from {src_dir} to {dst_dir}.")
+    print(f"Files moved: {files}")
+    print("\n".join(files))
+    return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
+
+
+
+
+
+
+
+def privacy_check(user_id, input_directory, is_privacy):
+    src_dir = './rag_data/stage_data'
+    dst_dir = f'./rag_data/data/{user_id}/{input_directory}'
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
+
+    files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
+
     for file in files:
         src_file_path = os.path.join(src_dir, file)
         dst_file_path = os.path.join(dst_dir, file)
@@ -66,5 +98,4 @@ def chunk_and_embed(user_id, input_directory):
     print(f"Moved {len(files)} files from {src_dir} to {dst_dir}.")
     print(f"Files moved: {files}")
     print("\n".join(files))
-    return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
-
+    return 'foo'

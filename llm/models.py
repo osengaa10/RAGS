@@ -40,3 +40,8 @@ class UserRagConfigs(Base):
     uid = Column(String, primary_key=True)
     rag = Column(String, primary_key=True)
     system_prompt = Column(String)
+
+
+class PrivateUsers(Base):
+    __tablename__ = 'private_users'
+    uid = Column(String, primary_key=True)
