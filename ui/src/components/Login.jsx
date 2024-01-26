@@ -26,17 +26,18 @@ const Login = () => {
         setIsLoading(true);
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                axiosBaseUrl.post('/is_private', {user_id: userCredential.user.uid})
-                    .then((response) => {
-                    console.log("privacy response: ", response.data.privacy)
-                    setIsPrivacyMode(response.data.privacy)
-                })
+                // axiosBaseUrl.post('/is_private', {user_id: userCredential.user.uid})
+                //     .then((response) => {
+                //     console.log("privacy response: ", response.data.privacy)
+                //     setIsPrivacyMode(response.data.privacy)
+                // })
+                setIsLoading(false)
+                const user = userCredential.user;
                 navigate("/");
             })
             .catch((error) => {
                 console.error("Login Error:", error.code, error.message);
                 setLoginError('Invalid username or password.');
-                setIsLoading(false);
             });
     }
 

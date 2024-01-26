@@ -48,7 +48,7 @@ function Home() {
     <>
     <Box
       h='calc(100vh)'
-      style={{overflow: 'auto'}}
+      style={{overflow: 'auto', paddingTop: '46px'}}
       // bgGradient={gradients}
       bg="#fffff8"
       color="black"

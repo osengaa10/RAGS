@@ -13,17 +13,33 @@ import {
   IconButton,
   Input,
   Textarea,
-  Button,
+  // Button,
   VStack,
   HStack,
-  Divider
+  Divider,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
+  Tooltip
 } from '@chakra-ui/react';
-import { InboxOutlined, DownloadOutlined } from '@ant-design/icons';
-import { Upload, AutoComplete } from 'antd';
+import { 
+  InboxOutlined, 
+  DownloadOutlined, 
+  InfoCircleOutlined, 
+  CloudSyncOutlined, 
+  CloudUploadOutlined, 
+  PlusOutlined,
+  EyeOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
+import { Upload, AutoComplete, Button } from 'antd';
 import { useAuthValue } from "../AuthContext";
 import Loader from "./Loader";
 import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
-import PrivacyLoader from './PrivacyLoader';
 const { Dragger } = Upload;
 
 function CustomUpload() {
@@ -31,7 +47,7 @@ function CustomUpload() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
-  const [vectorDBList, setVectorDBList] = useState([])
+  // const [vectorDBList, setVectorDBList] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
   const [uploadTimeEstimate, setUploadTimeEstimate] = useState(null)
@@ -39,10 +55,24 @@ function CustomUpload() {
   const [pdfFileBlob, setPdfFileBlob] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState(null);
-  const [systemPrompt, setSystemPrompt] = useState('');
+  // const [systemPrompt, setSystemPrompt] = useState('');
   const [ragConfigs, setRagConfigs] = useState()
   let navigate = useNavigate();
-  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
+  const { 
+    currentUser, 
+    isPrivacyMode,
+    setIsPrivacyMode,
+    vectorDBList,
+    setVectorDBList,
+    vectorDB,
+    setVectorDB,
+    messages,
+    setMessages,
+    convoHistory,
+    setConvoHistory,
+    systemPrompt,
+    setSystemPrompt
+   } = useAuthValue()
 
   const options = vectorDBList.map((item, index) => {
     return { label: item, value: String(index + 1) };
@@ -80,13 +110,6 @@ function CustomUpload() {
     },
   };
 
-  const isMobile = useBreakpointValue({ base: true, md: false });
-
-  const animation = keyframes `
-  to {
-     background-position: 200%;
-   }
-`
    const fetchDatabases = () => {
     axiosBaseUrl.get(`/databases/${currentUser.uid}`)
       .then((response) =>{
@@ -94,10 +117,11 @@ function CustomUpload() {
       })
    }
 
-  const onSelect = (data, option) => {
+  const onSelect = (option) => {
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
+    setVectorDB(option.label)
     axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
       .then((response) => {
         setSystemPrompt(response.data)
@@ -189,25 +213,25 @@ function CustomUpload() {
     <Box
       h='calc(100vh)'
       overflow='auto'
-      // bgGradient='radial(gray.100, gray.200, gray.300)'
       bg="#fffff8"
-      p={10}
+      p={useBreakpointValue({ base: 4, md: 10 })}
     >
-      <VStack spacing={6} align="stretch">
-        <Text
+      <VStack spacing={useBreakpointValue({ base: 4, md: 6 })} align="stretch">
+      <Text
           color='gray.700'
-          fontSize='3xl'
-          fontWeight='bold'
+          fontSize={useBreakpointValue({ base: 'xl', md: '2xl' })}
+          // fontWeight='bold'
           textAlign='center'
+          paddingTop={useBreakpointValue({ base: '0', md: '15px' })}
         >
-          Custom File Q&A
+          Create/Edit knowledge base
         </Text>
 
         <Flex justifyContent="center" alignItems="center">
           <Text
             color='gray.700'
-            fontSize='xl'
-            fontWeight='semibold'
+            fontSize='l'
+            // fontWeight='semibold'
             mr={4}
           >
             Select knowledge base:
@@ -217,7 +241,7 @@ function CustomUpload() {
             options={options}
             placeholder="knowledge base"
             // onChange={(e) => setSearchedValue(e.target.value)}
-            style={{width: 200}}
+            style={{width: 400}}
             filterOption={(searchedValue, option) => 
               option.label.toUpperCase().indexOf(searchedValue.toUpperCase()) !== -1
             }
@@ -227,12 +251,32 @@ function CustomUpload() {
           
         </Flex>
 
-        <Textarea
-          placeholder="System prompt..."
-          value={systemPrompt}
-          onChange={(e) => setSystemPrompt(e.target.value)}
-          size='lg'
-        />
+        <Flex justifyContent="center" alignItems="center">
+          <Textarea
+            placeholder="System prompt..."
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            size='lg'
+          />
+          <Popover>
+            <PopoverTrigger>
+              <IconButton
+                aria-label="Info about system prompt"
+                icon={<InfoCircleOutlined />}
+                size="sm"
+                ml={2}
+              />
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              <PopoverCloseButton />
+              <PopoverHeader>System Prompt Explanation</PopoverHeader>
+              <PopoverBody>
+                The system prompt is a predefined input that helps guide the system's response generation.
+              </PopoverBody>
+            </PopoverContent>
+          </Popover>
+        </Flex>
 
         <Dragger {...props}>
           <p className="ant-upload-drag-icon">
@@ -246,21 +290,36 @@ function CustomUpload() {
 
         {uploading ? <Loader /> : (
           <HStack spacing={4}>
-            <Button
-              onClick={handleUpload}
-              colorScheme='blue'
-              leftIcon={<DownloadOutlined />}
-            >
-              Submit
-            </Button>
-            {ragName && (
+
+               {vectorDBList.includes(ragName) ? 
+               <>
+              
               <Button
+                type="primary"
+                icon={<CloudSyncOutlined />}
+                onClick={handleUpload}
+              >
+                Update
+              </Button>
+              <Button
+                type="primary"
+                icon={<DeleteOutlined />}
                 onClick={handleDelete}
-                colorScheme='red'
+                danger
               >
                 Delete
               </Button>
-            )}
+            </>
+               : 
+               <Button
+               type="primary"
+               icon={<PlusOutlined />}
+               onClick={handleUpload}
+             >
+               Create
+             </Button>
+               }
+        
           </HStack>
         )}
 
@@ -273,13 +332,26 @@ function CustomUpload() {
         <Divider />
 
         <VStack spacing={4}>
-          <Text fontWeight='bold'>Knowledge base files</Text>
+        <Text
+            color='gray.700'
+            fontSize='l'
+            // fontWeight='semibold'
+            mr={4}
+          >
+            Knowledge base files:
+          </Text>
           {sourceFiles.map((file, index) => (
             <HStack key={index} justify="space-between">
               <Text isTruncated>{file}</Text>
-              <Button onClick={() => handleDownload(file)} colorScheme='teal'>
-                View PDF
-              </Button>
+              <Tooltip title="search">
+              <Button
+               type="primary"
+               icon={<EyeOutlined />}
+               onClick={() => handleDownload(file)}
+             >
+               View PDF
+             </Button>
+             </Tooltip>
             </HStack>
           ))}
           {pdfFileBlob && (

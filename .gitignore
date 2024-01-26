@@ -14,3 +14,6 @@ llm/rags-venv/
 llm/venv
 llm/router/__pycache__
 llm/.env*
+ui/src/assets/sun.jpeg
+ui/src/assets/ven0aaa2.tif
+ui/src/components/SolarSystem.jsx

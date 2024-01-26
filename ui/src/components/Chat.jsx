@@ -36,24 +36,29 @@ import { useAuthValue } from "../AuthContext"
 import { HamburgerIcon, CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
 import Loader from './Loader'
 import { useClipboard } from '@chakra-ui/react';
+import SideDrawer from './SideDrawer';
 
 const Chat = () => {
   const { onCopy, value, setValue, hasCopied } = useClipboard("");
-  const [messages, setMessages] = useState([]);
   const [prompt, setPrompt] = useState('')
   const [answer, setAnswer] = useState(null)
-  const [vectorDB, setVectorDB] = useState('')
-  const [vectorDBList, setVectorDBList] = useState([])
   const [loading, setLoading] = useState(false)
   const [sources, setSources] = useState([])
-  const [currentConversation, setCurrentConversation] = useState('');
   const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
-  const [systemPrompt, setSystemPrompt] = useState('');
   const btnRef = useRef();
   const messagesEndRef = useRef(null);
-  const [convoHistory, setConvoHistory] = useState([]);
   
-  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
+  const { 
+    currentUser, 
+    isPrivacyMode, 
+    setVectorDBList,
+    vectorDB,
+    setVectorDB,
+    messages,
+    setMessages,
+    setConvoHistory,
+    systemPrompt
+  } = useAuthValue()
 
     useEffect(() => {
       axiosBaseUrl.get(`/databases/${currentUser.uid}`)
@@ -76,30 +81,6 @@ const Chat = () => {
         if (messages.length) scrollToBottom();
     }, [messages]);
 
-    const handleSelectRAG = (vectorDB) => {
-      setVectorDB(vectorDB);
-      // Step 1: Filter the list
-      const filteredRag = convoHistory.filter(item => item.rag === vectorDB);
-      // Step 2: Sort the filtered list by 'created_at'
-      const sortedRag = filteredRag.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      // Step 3: Transform into the desired format
-      const convo = sortedRag.flatMap(item => [
-          { text: item.prompt, sender: 'user' },
-          { text: item.response, sender: 'llm', sources: item.sources, system_prompt: item.system_prompt }
-      ]);
-      axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: vectorDB})
-        .then((response) => {
-          setSystemPrompt(response.data)
-      })
-      setMessages(convo)
-      onClose();
-    };
-
-
-      const handleCopy = (text) => {
-        const { onCopy } = useClipboard(text);
-        onCopy(); // This will copy the text
-      };
     
 
   const handleSendMessage = () => {
@@ -145,38 +126,8 @@ const Chat = () => {
   return (
     <>
        <Flex justifyContent="space-between" alignItems="center">
-        <IconButton
-          ref={btnRef}
-          icon={<HamburgerIcon />}
-          onClick={onOpen}
-          variant="outline"
-          m={2}
-        />
         <Heading size="md" mr={2}>{vectorDB}</Heading>
       </Flex>
-      <Drawer isOpen={isOpen} placement="left" onClose={onClose} finalFocusRef={btnRef}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>Knowledge bases</DrawerHeader>
-          <DrawerBody>
-            {vectorDBList.map((vDB) => (
-              <Button
-                key={vDB}
-                variant="ghost"
-                justifyContent="flex-start"
-                w="100%"
-                onClick={() => {
-                    handleSelectRAG(vDB);
-                  onClose();
-                }}
-              >
-                {vDB}
-              </Button>
-            ))}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
       <VStack spacing={4}>
         
         <Box width="100%" overflowY="scroll">
@@ -227,8 +178,6 @@ const Chat = () => {
                         </Flex>
                             
                     </Flex>
-                    
-                    
                 <Accordion allowToggle width="100%">
                     <AccordionItem>
                     <AccordionButton justifyContent="space-between">

@@ -27,9 +27,9 @@ function App() {
     console.log("after onAuthStateChanged")
   }, []);
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  // if (isLoading) {
+  //   return <Loader />;
+  // }
 
   const router = createBrowserRouter(
     createRoutesFromElements(
