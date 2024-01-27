@@ -36,7 +36,6 @@ import { useAuthValue } from "../AuthContext"
 import { HamburgerIcon, CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
 import Loader from './Loader'
 import { useClipboard } from '@chakra-ui/react';
-import SideDrawer from './SideDrawer';
 
 const Chat = () => {
   const { onCopy, value, setValue, hasCopied } = useClipboard("");

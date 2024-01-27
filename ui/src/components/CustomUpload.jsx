@@ -117,11 +117,10 @@ function CustomUpload() {
       })
    }
 
-  const onSelect = (option) => {
+  const onSelect = (data,option) => {
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
-    setVectorDB(option.label)
     axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
       .then((response) => {
         setSystemPrompt(response.data)

@@ -3,7 +3,7 @@ import { Link, useNavigate, Outlet } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from '../firebase';
 import { Layout, Menu, Drawer, Button } from 'antd';
-import { HomeTwoTone, CloudUploadOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons';
+import { HomeTwoTone, SettingOutlined, LogoutOutlined, MenuOutlined, MessageOutlined } from '@ant-design/icons';
 import { useAuthValue } from "../AuthContext";
 import { axiosBaseUrl } from '../axiosBaseUrl';
 
@@ -78,15 +78,15 @@ const Header = (props) => {
 
       const renderMenu = () => (
         <Menu style={{ position: 'fixed' }} onClick={onClick} selectedKeys={[current]} mode={isMobile ? "vertical" : "horizontal"} theme="light">
-            <SubMenu key="h" icon={<HomeTwoTone />} title={<Link to="/" onClick={onClose}>Home</Link>}>
+            <SubMenu key="h" icon={<MessageOutlined />} title={<Link to="/" onClick={onClose}>Chat</Link>}>
                 {vectorDBList.map((vDB) => (
                     <Menu.Item key={vDB} onClick={() => handleSelectRAG(vDB)}>
                         <Link to="/" onClick={onClose}>{vDB}</Link>
                     </Menu.Item>
                 ))}
             </SubMenu>
-            <Menu.Item key="r" icon={<CloudUploadOutlined />} >
-                <Link to="/custom" onClick={onClose}>Manage Knowledge Bases</Link>
+            <Menu.Item key="r" icon={<SettingOutlined />} >
+                <Link to="/custom" onClick={onClose}>Edit Knowledge Bases</Link>
             </Menu.Item>
             <Menu.Item key="m" onClick={handleLogout} icon={<LogoutOutlined />} >
                 Logout {props.displayName}
