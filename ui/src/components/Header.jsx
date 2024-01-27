@@ -126,7 +126,7 @@ const Header = (props) => {
                 <ItemGroup>
                     {vectorDBList.map((vDB) => (
                         <Menu.Item key={vDB} onClick={() => handleSelectRAG(vDB)}>
-                            {vDB}
+                            <Link to="/" onClick={onClose}>{vDB}</Link>
                         </Menu.Item>
                     ))}
                 </ItemGroup>
