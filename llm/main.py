@@ -177,8 +177,13 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
 
     sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
     result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
-    system_prompt = result.fetchone()
-    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt)
+    row = result.fetchone()
+    system_prompt_str = row[0]
+    # if row is not None:
+    #     system_prompt_str = row['system_prompt']
+    # else:
+    #     system_prompt_str = ""  
+    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt_str)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []

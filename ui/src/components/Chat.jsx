@@ -56,21 +56,9 @@ const Chat = () => {
     messages,
     setMessages,
     setConvoHistory,
-    systemPrompt
+    systemPrompt,
+    vectorDBList
   } = useAuthValue()
-
-    useEffect(() => {
-      axiosBaseUrl.get(`/databases/${currentUser.uid}`)
-          .then((response) =>{
-              setVectorDBList(response.data)
-          })
-      if(!isPrivacyMode) {
-        axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
-        .then((response) =>{
-            setConvoHistory(response.data)
-        })
-      }
-    },[])
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -87,14 +75,14 @@ const Chat = () => {
     setLoading(true)
     console.log("systemPrompt::: ", systemPrompt)
     axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid, system_prompt: systemPrompt})
-          .then((response) => {
+        .then((response) => {
             setAnswer(response.data.answer)
             setLoading(false)
             setSources(response.data.sources)
             const sauces = (response.data.sources).map(sauce => sauce.page_content)
             setMessages([...messages, { text: prompt, sender: 'user', system_prompt: systemPrompt}, { text: response.data.answer, sender: 'llm', sources: sauces}]);
             if(!isPrivacyMode) {
-              axiosBaseUrl.post(`/archive_message`, 
+                axiosBaseUrl.post(`/archive_message`, 
                 {
                     uid: String(currentUser.uid), 
                     rag: vectorDB, 
@@ -110,13 +98,12 @@ const Chat = () => {
                     console.log(`convo error ${err}`)
                 })
             }
-            
-          })
-          .catch((e) => {
-            console.log(`llm error ${e}`)
-            alert('Api screwed up')
-          }) 
-      setPrompt('');
+        })
+        .catch((e) => {
+        console.log(`llm error ${e}`)
+        alert('Api screwed up')
+        }) 
+    setPrompt('');
   };
 
   const width = useBreakpointValue({ base: '99%', md: '400px' });
@@ -125,11 +112,16 @@ const Chat = () => {
   return (
     <>
        <Flex justifyContent="space-between" alignItems="center">
-        <Heading size="md" mr={2}>{vectorDB}</Heading>
+        {isPrivacyMode ?
+          <Heading size="md" mr={2}>{vectorDB}</Heading>
+          :
+          <></>
+        }
+        
       </Flex>
       <VStack spacing={4}>
         
-        <Box width="100%" overflowY="scroll">
+        {/* <Box width="100%" > */}
           {messages.map((message, index) => (
                 <Box key={index} p={2} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
                {message.sender === 'user' ? (
@@ -202,21 +194,35 @@ const Chat = () => {
             </Box>
           ))}
           <div ref={messagesEndRef} />
-        </Box>
+        {/* </Box> */}
         <Divider />
         { loading ? 
         <Loader />
         :
         <>
-        <Input
-          placeholder="Type a message..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-        />
-        <Button colorScheme="blue" onClick={handleSendMessage}>
-          Send
-        </Button>
+        {(messages.length || vectorDB != '') ?
+        <>
+            <Input
+            placeholder="Type a message..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+          />
+          <Button colorScheme="blue" onClick={handleSendMessage}>
+            Send
+          </Button>
+        </>
+          :
+          <Text
+          color='gray.700'
+          fontSize='xl'
+          // fontWeight='bold'
+          textAlign='center'
+        >
+          Select knowledge base
+        </Text>
+        }
+        
         </>
         }
         

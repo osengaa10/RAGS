@@ -113,22 +113,16 @@ def create_user_chain(user_id, input_directory, system_prompt):
     # instruction = """CONTEXT:/n/n {context}/n
 
     # Question: {question}"""
+    # print(f"create_user_chain system prompt:: {system_prompt}")
     PARAMETERIZED_SYSTEM_PROMPT = ''
     if system_prompt == "":
         PARAMETERIZED_SYSTEM_PROMPT = """You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
         If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please do not share false information.
         """
     else:
-        print(f"create_user_chain system prompt:: {system_prompt}")
         PARAMETERIZED_SYSTEM_PROMPT = system_prompt
 
-    PARAMETERIZED_SYSTEM_PROMPT = """
 
-    You are a helpful, genius and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done.
-    If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please do not share false information.
-    
-    """
-    
     # user_system_prompt = system_prompt
     # PARAMETERIZED_SYSTEM_PROMPT = """
     # {user_system_prompt}

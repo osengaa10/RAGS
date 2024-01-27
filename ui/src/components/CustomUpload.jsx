@@ -211,15 +211,13 @@ function CustomUpload() {
   return (
     <Box
       h='calc(100vh)'
-      overflow='auto'
       bg="#fffff8"
-      p={useBreakpointValue({ base: 4, md: 10 })}
+      p={useBreakpointValue({ base: 4, md: 1 })}
     >
       <VStack spacing={useBreakpointValue({ base: 4, md: 6 })} align="stretch">
       <Text
           color='gray.700'
           fontSize={useBreakpointValue({ base: 'xl', md: '2xl' })}
-          // fontWeight='bold'
           textAlign='center'
           paddingTop={useBreakpointValue({ base: '0', md: '15px' })}
         >
@@ -239,7 +237,6 @@ function CustomUpload() {
             value={searchedValue}
             options={options}
             placeholder="knowledge base"
-            // onChange={(e) => setSearchedValue(e.target.value)}
             style={{width: 400}}
             filterOption={(searchedValue, option) => 
               option.label.toUpperCase().indexOf(searchedValue.toUpperCase()) !== -1

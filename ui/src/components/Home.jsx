@@ -12,12 +12,25 @@ import Chat from './Chat';
 import { useAuthValue } from "../AuthContext"
 import PrivacyLoader from './PrivacyLoader';
 import { axiosBaseUrl } from '../axiosBaseUrl';
+import { NavLink, useNavigate } from 'react-router-dom';
+
 
 function Home() {
-  const { currentUser, isPrivacyMode, setIsPrivacyMode } = useAuthValue()
+  const navigate = useNavigate();
+  const { 
+    currentUser, 
+    isPrivacyMode, 
+    setIsPrivacyMode, 
+    vectorDB, 
+    vectorDBList,
+    setVectorDBList,
+    setConvoHistory,
+    convoHistory,
+    setMessages
+  } = useAuthValue()
 
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
-
+  console.log("vectorDBList::: ", vectorDBList)
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -30,12 +43,21 @@ function Home() {
           })
           console.log("uid", uid)
         } else {
-          // User is signed out
-          // ...
           console.log("user is logged out")
         }
+    });
 
-      });
+      axiosBaseUrl.get(`/databases/${currentUser.uid}`)
+      .then((response) =>{
+          setVectorDBList(response.data)
+      })
+      if(!isPrivacyMode) {
+        axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
+        .then((response) =>{
+            setConvoHistory(response.data)
+            console.log("response at Home.jsx")
+        })
+   }
      
 }, [])
   const animation = keyframes `
@@ -48,8 +70,6 @@ function Home() {
     <>
     <Box
       h='calc(100vh)'
-      style={{overflow: 'auto', paddingTop: '46px'}}
-      // bgGradient={gradients}
       bg="#fffff8"
       color="black"
       animation= {`${animation} 1s linear infinite`}
@@ -81,13 +101,15 @@ function Home() {
       bgClip='text'
       fontSize='4xl'
     >
-      Ask a question
+      {vectorDB}
     </Text>
       }
-      
-        
-            
-      <Chat />
+      {!vectorDBList.length ?
+      navigate("/custom")
+        :
+        <Chat />
+      }
+      {/* <Chat /> */}
     </div>
     </Box>
     </>
