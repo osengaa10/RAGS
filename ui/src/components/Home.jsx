@@ -25,12 +25,12 @@ function Home() {
     vectorDBList,
     setVectorDBList,
     setConvoHistory,
+    messages,
     convoHistory,
     setMessages
   } = useAuthValue()
 
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
-  console.log("vectorDBList::: ", vectorDBList)
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {
         if (user) {

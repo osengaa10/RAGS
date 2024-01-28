@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { saveAs } from 'file-saver'; // You might need to install file-saver package
-
 import './CustomUpload.css';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import {
   Box,
-  keyframes,
   Text,
   Flex,
   useBreakpointValue,
   IconButton,
-  Input,
   Textarea,
-  // Button,
   VStack,
   HStack,
   Divider,
@@ -57,7 +52,11 @@ function CustomUpload() {
   const [fileName, setFileName] = useState(null);
   // const [systemPrompt, setSystemPrompt] = useState('');
   const [ragConfigs, setRagConfigs] = useState()
+
+
   let navigate = useNavigate();
+  const inputWidth = useBreakpointValue({ base: '100%', md: '400px' });
+
   const { 
     currentUser, 
     isPrivacyMode,
@@ -86,6 +85,26 @@ function CustomUpload() {
   useEffect(() => {
     fetchDatabases()
   },[])
+
+  useEffect(() => {
+    setTempPrompt(systemPrompt);
+  }, [systemPrompt]);
+
+  const handleFocus = () => {
+    setTempPrompt('');
+  };
+
+  const handleBlur = () => {
+    if (tempPrompt.trim() === '') {
+      setTempPrompt(systemPrompt);
+    }
+  };
+
+  const handleChange = (e) => {
+    setTempPrompt(e.target.value);
+  };
+
+  const [tempPrompt, setTempPrompt] = useState(systemPrompt);
   
   let props = {
     name: 'file',
@@ -225,14 +244,6 @@ function CustomUpload() {
         </Text>
 
         <Flex justifyContent="center" alignItems="center">
-          <Text
-            color='gray.700'
-            fontSize='l'
-            // fontWeight='semibold'
-            mr={4}
-          >
-            Select knowledge base:
-          </Text>
           <AutoComplete
             value={searchedValue}
             options={options}
@@ -250,9 +261,12 @@ function CustomUpload() {
         <Flex justifyContent="center" alignItems="center">
           <Textarea
             placeholder="System prompt..."
-            value={systemPrompt}
+            value={tempPrompt}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onChange={(e) => setSystemPrompt(e.target.value)}
             size='lg'
+            style={{ width: inputWidth }} 
           />
           <Popover>
             <PopoverTrigger>

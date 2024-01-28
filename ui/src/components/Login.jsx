@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Button, Link, Text, Divider, Box, FormControl, FormLabel, FormErrorMessage } from '@chakra-ui/react';
+import {  Link, Text, Divider, Box, FormControl, FormLabel, FormErrorMessage, Spacer, Flex } from '@chakra-ui/react';
 import { Input } from 'antd';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { useAuthValue } from "../AuthContext"
 import { axiosBaseUrl } from '../axiosBaseUrl';
+import TermsAndConditions from './TermsAndConditions';
+import { Button } from 'antd';
 
 
 const Login = () => {
@@ -26,11 +28,6 @@ const Login = () => {
         setIsLoading(true);
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                // axiosBaseUrl.post('/is_private', {user_id: userCredential.user.uid})
-                //     .then((response) => {
-                //     console.log("privacy response: ", response.data.privacy)
-                //     setIsPrivacyMode(response.data.privacy)
-                // })
                 setIsLoading(false)
                 const user = userCredential.user;
                 navigate("/");
@@ -42,6 +39,7 @@ const Login = () => {
     }
 
     return (
+        <Flex direction="column" h='100vh' bg="#fffff8" color="black" p={5}>
         <Box h='100vh' bg="#fffff8" color="black" p={5}>
             <Text bgColor='black' bgClip='text' fontSize='4xl' fontWeight='extrabold'>
                 Chat with any PDF
@@ -69,10 +67,18 @@ const Login = () => {
                     />
                     <FormErrorMessage>{loginError}</FormErrorMessage>
                 </FormControl>
-                <Button isLoading={isLoading} type="submit" colorScheme='blue' w="full" my={2}
+                {/* <Button isLoading={isLoading} type="submit" colorScheme='blue' w="full" my={2}
                     _hover={{
                         bgGradient: 'linear(to-r, red.500, yellow.500)',
                     }}>Login
+                </Button> */}
+                <Button 
+                    type="primary" 
+                    htmlType="submit" 
+                    loading={isLoading} 
+                    block
+                >
+                    Login
                 </Button>
             </form>
             <Text>
@@ -83,7 +89,11 @@ const Login = () => {
                     </Link>
                 </NavLink>
             </Text>
+            
         </Box>
+        <Spacer />
+        <TermsAndConditions />
+        </Flex>
     );
 }
 

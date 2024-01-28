@@ -35,6 +35,7 @@ import { axiosBaseUrl } from '../axiosBaseUrl';
 import { useAuthValue } from "../AuthContext"
 import { HamburgerIcon, CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
 import Loader from './Loader'
+import KnowledgeBaseDropdown from './KnowledgeBaseDropdown'
 import { useClipboard } from '@chakra-ui/react';
 
 const Chat = () => {
@@ -46,18 +47,14 @@ const Chat = () => {
   const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
   const btnRef = useRef();
   const messagesEndRef = useRef(null);
-  
+
   const { 
     currentUser, 
     isPrivacyMode, 
-    setVectorDBList,
     vectorDB,
-    setVectorDB,
     messages,
     setMessages,
-    setConvoHistory,
     systemPrompt,
-    vectorDBList
   } = useAuthValue()
 
     const scrollToBottom = () => {
@@ -120,7 +117,6 @@ const Chat = () => {
         
       </Flex>
       <VStack spacing={4}>
-        
         {/* <Box width="100%" > */}
           {messages.map((message, index) => (
                 <Box key={index} p={2} alignSelf={message.sender === 'user' ? 'flex-end' : 'flex-start'}>
@@ -213,14 +209,15 @@ const Chat = () => {
           </Button>
         </>
           :
-          <Text
-          color='gray.700'
-          fontSize='xl'
-          // fontWeight='bold'
-          textAlign='center'
-        >
-          Select knowledge base
-        </Text>
+        //   <Text
+        //   color='gray.700'
+        //   fontSize='xl'
+        //   // fontWeight='bold'
+        //   textAlign='center'
+        // >
+        //   Select knowledge base
+        // </Text>
+        <KnowledgeBaseDropdown />
         }
         
         </>

@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { 
-    Button, 
     Link, 
     Text, 
     Divider, 
@@ -24,13 +23,17 @@ import {
     Tooltip,
     IconButton,
     UnorderedList,
-    ListItem
+    ListItem,
+    Spacer
 } from '@chakra-ui/react';
 import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import { useAuthValue } from "../AuthContext"
 import { Input } from 'antd';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { axiosBaseUrl } from '../axiosBaseUrl';
+import { Button } from 'antd';
+import TermsAndConditions from './TermsAndConditions';
+
 
 
 const Signup = () => {
@@ -84,6 +87,7 @@ const Signup = () => {
         };
 
     return (
+        <Flex direction="column" h='100vh' bg="#fffff8" color="black" p={5}>
         <Box h='100vh' style={localDarkMode ? darkModeStyles : { backgroundColor: '#fffff8', color: 'black' }} p={5}>
             <Text style={localDarkMode ? { color: 'white' } : { color: 'black' }} fontSize='4xl' fontWeight='extrabold'>
                 Chat with any PDF
@@ -150,10 +154,13 @@ const Signup = () => {
                             </PopoverContent>
                           </Popover>
                 </Flex>
-                <Button isLoading={isLoading} type="submit" colorScheme='blue' w="full"
-                    _hover={{
-                        bgGradient: 'linear(to-r, red.500, yellow.500)',
-                    }}>Sign Up
+                <Button 
+                    type="primary" 
+                    htmlType="submit" 
+                    loading={isLoading} 
+                    block
+                >
+                    Sign Up
                 </Button>
             </form>
             <Text>
@@ -171,6 +178,9 @@ const Signup = () => {
                 as this will be used to retrieve your previous knowledge bases.
             </Text>
         </Box>
+        <Spacer />
+        <TermsAndConditions />
+        </Flex>
     );
 }
 

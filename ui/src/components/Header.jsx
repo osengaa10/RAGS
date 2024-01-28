@@ -12,7 +12,7 @@ const { SubMenu, ItemGroup } = Menu;
 
 const Header = (props) => {
     const [current, setCurrent] = useState('h');
-    const [isItemGroupCollapsed, setIsItemGroupCollapsed] = useState(true);
+    const [isItemGroupCollapsed, setIsItemGroupCollapsed] = useState(false);
 
     const [visible, setVisible] = useState(false);
     const navigate = useNavigate();

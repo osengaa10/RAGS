@@ -11,6 +11,7 @@ export function AuthProvider({children, value}) {
   const [convoHistory, setConvoHistory] = useState([]);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [reRender, setReRender] = useState(false);
 
 
   const contextValue = {
@@ -28,7 +29,9 @@ export function AuthProvider({children, value}) {
     systemPrompt,
     setSystemPrompt,
     isMobile,
-    setIsMobile
+    setIsMobile,
+    reRender,
+    setReRender,
   };
 
   return (
