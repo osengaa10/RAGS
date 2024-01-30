@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
 from rag import *
 from chunk_and_embed import chunk_and_embed
@@ -109,11 +109,24 @@ async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
         # Extract system_prompt value from the row
         system_prompt = system_prompt_row[0]  # Assuming system_prompt is the first column
         print(f"system_prompt::: {system_prompt}")
-        print(type(system_prompt))
         return system_prompt  # Return the system_prompt value as a string
     else:
         return "No system prompt found for the given user and rag name."
 
+@prefix_router.post("/jobs_in_progress") 
+async def fetch_rag_configs(request_body: QueryRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    sql_query = text("select rag FROM running_pipelines WHERE uid = :uid")
+    result = db.execute(sql_query, {'uid': uid})
+    running_rag_row = result.fetchone()
+    # Check if a row was returned
+    if running_rag_row is not None:
+        # Extract system_prompt value from the row
+        running_rag = running_rag_row[0]  # Assuming system_prompt is the first column
+        print(f"running_rag::: {running_rag}")
+        return [running_rag]  # Return the system_prompt value as a string
+    else:
+        return []
 
 @prefix_router.post("/set_privacy_flag") 
 async def set_privacy_flag(request_body: Privacy, db: Session = Depends(get_db)):
@@ -174,15 +187,11 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
     uid = item.user_id
     rag_name = item.input_directory
     system_prompt = item.system_prompt
-
+    # fix for privacy users
     sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
     result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
     row = result.fetchone()
     system_prompt_str = row[0]
-    # if row is not None:
-    #     system_prompt_str = row['system_prompt']
-    # else:
-    #     system_prompt_str = ""  
     qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt_str)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
@@ -201,22 +210,37 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
 
 
 @prefix_router.post("/chunk_and_embed")
-async def upload_to_vector_db(files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...), is_privacy: bool = Form(...)):
-    error = ''
+async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...), is_privacy: bool = Form(...), db: Session = Depends(get_db)):
+    if not os.path.exists(f'./rag_data/stage_data/{user_id}/'):
+        os.makedirs(f'./rag_data/stage_data/{user_id}/')
     for file in files:
         try:
             with open(file.filename, 'wb') as f:
                 shutil.copyfileobj(file.file, f)
                 print(f"upload_to_vector_db dir==== {os.getcwd()}")
-                shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{file.filename}")
-                print(F"=====AFTER MOVED LS====== {os.listdir('./')}")
+                shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{user_id}/{file.filename}")
         except Exception:
-            error = Exception
             return {"message": f"Error: {Exception})"}
         finally:
             file.file.close()
-    print(f"ERRORRRRRRRR::: {error}")
-    return chunk_and_embed(user_id, input_directory, is_privacy)
+    sql_query = text("""
+                    INSERT INTO running_pipelines (uid, rag)
+                    VALUES (:uid, :rag)
+                    ON CONFLICT (uid, rag) 
+                    DO NOTHING
+                     RETURNING *
+                    """
+                    )
+    result = db.execute(sql_query, {'uid': user_id, 'rag': input_directory})
+    db.commit()
+    if result is None:
+        return {"message": "You already have a running pipeline."}
+    else:
+        background_tasks.add_task(chunk_and_embed, user_id, input_directory, is_privacy)
+        # return chunk_and_embed(user_id, input_directory, is_privacy)
+        return {"message": "The data pipeline has begun and is running. You will be notified upon completion."}
+
+    # return chunk_and_embed(user_id, input_directory, is_privacy)
 
 
 

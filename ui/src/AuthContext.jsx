@@ -4,17 +4,16 @@ const AuthContext = React.createContext()
 
 export function AuthProvider({children, value}) {
 
-  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
-  const [vectorDBList, setVectorDBList] = useState([]);
-  const [vectorDB, setVectorDB] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [convoHistory, setConvoHistory] = useState([]);
-  const [systemPrompt, setSystemPrompt] = useState('');
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [reRender, setReRender] = useState(false);
+    const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+    const [vectorDBList, setVectorDBList] = useState([]);
+    const [vectorDB, setVectorDB] = useState('');
+    const [messages, setMessages] = useState([]);
+    const [convoHistory, setConvoHistory] = useState([]);
+    const [systemPrompt, setSystemPrompt] = useState('');
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [runningRags, setRunningRags] = useState([]);
 
-
-  const contextValue = {
+    const contextValue = {
     ...value,
     isPrivacyMode,
     setIsPrivacyMode,
@@ -30,15 +29,15 @@ export function AuthProvider({children, value}) {
     setSystemPrompt,
     isMobile,
     setIsMobile,
-    reRender,
-    setReRender,
-  };
+    runningRags,
+    setRunningRags
+    };
 
-  return (
+    return (
     <AuthContext.Provider value={contextValue}>
-      {children}
+        {children}
     </AuthContext.Provider>
-  )
+    )
 }
 
 export function useAuthValue(){

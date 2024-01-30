@@ -103,12 +103,13 @@ def create_chain(user_id, input_directory):
 def create_user_chain(user_id, input_directory, system_prompt):
     """create the chain to answer questions"""
 
-    # PARAMETERIZED_SYSTEM_PROMPT = f"""You have 30 years experience practicing oncology.
+    # PARAMETERIZED_SYSTEM_PROMPT = f"""
+    # You have 30 years experience practicing oncology.
     # Always anwser the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. 
     # The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. 
     # If you don't know the answer to a question, please don't share false information.
     
-    # """
+    # # """
 
     # instruction = """CONTEXT:/n/n {context}/n
 

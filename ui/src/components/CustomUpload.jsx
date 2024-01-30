@@ -35,6 +35,13 @@ import { Upload, AutoComplete, Button } from 'antd';
 import { useAuthValue } from "../AuthContext";
 import Loader from "./Loader";
 import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
+import * as pdfjsLib from 'pdfjs-dist';
+
+const pdfjs = await import('pdfjs-dist/build/pdf');
+const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 const { Dragger } = Upload;
 
 function CustomUpload() {
@@ -54,8 +61,9 @@ function CustomUpload() {
   const [ragConfigs, setRagConfigs] = useState()
 
 
+  
   let navigate = useNavigate();
-  const inputWidth = useBreakpointValue({ base: '100%', md: '400px' });
+  const inputWidth = useBreakpointValue({ base: '100%', md: '100%' });
 
   const { 
     currentUser, 
@@ -112,18 +120,39 @@ function CustomUpload() {
     customRequest: dummyRequest,
     status: 'done',
     accept:'application/pdf',
+    // onChange (e) {
+    //   let files = (e.fileList).map(object => object.originFileObj)
+    //   let fileSize = (e.fileList).map(object => object.size);
+    //   setSelectedFiles(files);
+    //   let totalSize = 0;
+    //   totalSize = fileSize.reduce((sum, number) => {
+    //     return sum + number;
+    //   }, 0)
+    //   console.log("totalSize::: ", totalSize/(1024 * 1024))
+    //   setUploadTimeEstimate(Math.round((totalSize/(1024 * 1024)*10)/60))
+    //   const sizeLimit = 500 * 1024 * 1024; // 500MB in bytes
+    // },
+
     onChange (e) {
-      let files = (e.fileList).map(object => object.originFileObj)
-      let fileSize = (e.fileList).map(object => object.size);
-      setSelectedFiles(files);
-      let totalSize = 0;
-      totalSize = fileSize.reduce((sum, number) => {
-        return sum + number;
-      }, 0)
-      console.log("totalSize::: ", totalSize/(1024 * 1024))
-      setUploadTimeEstimate(Math.round((totalSize/(1024 * 1024)*10)/60))
-      const sizeLimit = 500 * 1024 * 1024; // 500MB in bytes
-    },
+        let files = (e.fileList).map(object => object.originFileObj);
+        setSelectedFiles(files);
+        // Process each file to count the total number of pages
+        files.forEach(file => {
+          const fileReader = new FileReader();
+          fileReader.onload = async (event) => {
+            const typedArray = new Uint8Array(event.target.result);
+            try {
+              const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+              console.log(`Number of Pages in file ${file.name}: `, pdf.numPages);
+              setUploadTimeEstimate(Math.round(((pdf.numPages)*0.5)/60))
+              // Do something with the number of pages...
+            } catch (error) {
+              console.error("Error reading PDF file:", error);
+            }
+          };
+          fileReader.readAsArrayBuffer(file);
+        });
+      },
     onDrop(e) {
       console.log('Dropped files', e.dataTransfer.files);
     },
@@ -177,36 +206,37 @@ function CustomUpload() {
     });
   };
 
-  const handleUpload = () => {
-    if (selectedFiles.length === 0 && ragName !=='' && !isPrivacyMode) {
-      axiosBaseUrl.post('/save_rag_config', {uid: currentUser.uid, input_directory: ragName, system_prompt: systemPrompt})
-        .then((response) => {
-          console.log("saved the following system prompt:: ", systemPrompt);
-        })
-      return;
-    } else {
-      setUploading(true)
-      const formData = new FormData();
-          selectedFiles.forEach((file, index) => {
-        formData.append(`files`, file);
-      });
-      formData.append(`input_directory`, ragName)
-      formData.append(`user_id`, currentUser.uid)
-      formData.append(`is_privacy`, isPrivacyMode)
-      axiosBaseUrl.post('/chunk_and_embed', formData)
-      .then(response => {
-        // Handle the response from the server
-        setUploading(false)
-        navigate("/");
-      })
-      .catch(error => {
-        // Handle errors
-        console.error('Error uploading file:', error);
-        setUploading(false)
-      });
+    const handleUpload = () => {
+        if (ragName !=='' && !isPrivacyMode) {
+            axiosBaseUrl.post('/save_rag_config', {uid: currentUser.uid, input_directory: ragName, system_prompt: systemPrompt})
+                .then((response) => {
+                    console.log("saved the following system prompt:: ", systemPrompt);
+            })
+        } 
+        
+        if (selectedFiles.length !== 0 && ragName !=='') {
+            setUploading(true)
+            const formData = new FormData();
+            selectedFiles.forEach((file, index) => {
+            formData.append(`files`, file);
+            });
+            formData.append(`input_directory`, ragName)
+            formData.append(`user_id`, currentUser.uid)
+            formData.append(`is_privacy`, isPrivacyMode)
+            axiosBaseUrl.post('/chunk_and_embed', formData)
+            .then(response => {
+                // Handle the response from the server
+                setUploading(false)
+                navigate("/");
+            })
+            .catch(error => {
+                // Handle errors
+                console.error('Error uploading file:', error);
+                setUploading(false)
+            });
+    
+        }
     }
-
-  }
 
 
   const handleDelete = () => {

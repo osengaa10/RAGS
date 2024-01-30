@@ -27,7 +27,9 @@ function Home() {
     setConvoHistory,
     messages,
     convoHistory,
-    setMessages
+    setMessages,
+    setRunningRags,
+    runningRags
   } = useAuthValue()
 
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
@@ -58,6 +60,11 @@ function Home() {
             console.log("response at Home.jsx")
         })
    }
+   axiosBaseUrl.post(`/jobs_in_progress`, {uid: currentUser.uid})
+   .then((response) =>{
+    setRunningRags(response.data)
+       console.log("rags response :::", response.data)
+   })
      
 }, [])
   const animation = keyframes `

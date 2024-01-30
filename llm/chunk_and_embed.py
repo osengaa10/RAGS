@@ -22,59 +22,127 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import DirectoryLoader
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 import configs
+from sqlalchemy import text
+from database import SessionLocal
+
+
 
 
 ################################################################################
 # split documents into chunks, create embeddings, store embeddings in chromaDB #
 ################################################################################
 def chunk_and_embed(user_id, input_directory, is_privacy):
-    """split documents into chunks, create embeddings, store embeddings in chromaDB"""
-    chunk_size = 1000
-    chunk_overlap=200
-    current_dir = os.getcwd()
-    print(f"chunk_and_embed directory==== {current_dir}")
-    loader = DirectoryLoader('./rag_data/stage_data', glob="./*.pdf", loader_cls=PyPDFLoader)
-    documents = loader.load()
-    print(f' number of documents {len(documents)}')
-    #splitting the text into
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    texts = text_splitter.split_documents(documents)
-    print(f' number of chunks {len(texts)}')
 
-    persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
-    t1 = time.perf_counter()
-    Chroma.from_documents(documents=texts,
-                                    embedding=configs.embedding,
-                                    persist_directory=persist_directory)
-    t2 = time.perf_counter()
-    print(f'time taken to embed {len(texts)} chunks:',t2-t1)
-    print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
-    print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
+    db = SessionLocal()
+    # """split documents into chunks, create embeddings, store embeddings in chromaDB"""
+    # chunk_size = 1000
+    # chunk_overlap=200
+    # current_dir = os.getcwd()
+    # print(f"chunk_and_embed directory==== {current_dir}")
+    # loader = DirectoryLoader(f'./rag_data/stage_data/{user_id}', glob="./*.pdf", loader_cls=PyPDFLoader)
+    # documents = loader.load()
+    # print(f' number of documents {len(documents)}')
+    # #splitting the text into
+    # text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    # texts = text_splitter.split_documents(documents)
+    # print(f' number of chunks {len(texts)}')
 
-    src_dir = './rag_data/stage_data'
-    dst_dir = f'./rag_data/data/{user_id}/{input_directory}'
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
+    # persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
+    # t1 = time.perf_counter()
+    # Chroma.from_documents(documents=texts,
+    #                                 embedding=configs.embedding,
+    #                                 persist_directory=persist_directory)
+    # t2 = time.perf_counter()
+    # print(f'time taken to embed {len(texts)} chunks:',t2-t1)
+    # print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
+    # print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
 
-    files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
+    # src_dir = f'./rag_data/stage_data/{user_id}'
+    # dst_dir = f'./rag_data/data/{user_id}/{input_directory}'
+    # if not os.path.exists(dst_dir):
+    #     os.makedirs(dst_dir)
 
-    if not is_privacy:
-        for file in files:
-            src_file_path = os.path.join(src_dir, file)
-            dst_file_path = os.path.join(dst_dir, file)
-            shutil.move(src_file_path, dst_file_path)
-    else:
-        for file in files:
-            src_file_path = os.path.join(src_dir, file)
-            os.remove(src_file_path)
+    # files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
 
+    # if not is_privacy:
+    #     for file in files:
+    #         src_file_path = os.path.join(src_dir, file)
+    #         dst_file_path = os.path.join(dst_dir, file)
+    #         shutil.move(src_file_path, dst_file_path)
+    # else:
+    #     for file in files:
+    #         src_file_path = os.path.join(src_dir, file)
+    #         os.remove(src_file_path)
 
+    # print(f"Moved {len(files)} files from {src_dir} to {dst_dir}.")
+    # print(f"Files moved: {files}")
+    # print("\n".join(files))
+    # sql_query = text("""
+    #                     DELETE FROM running_pipelines 
+    #                     WHERE uid = :uid AND rag = :rag
+    #                     """)
+    # db.execute(sql_query, {'uid': user_id, 'rag': input_directory})
+    # db.commit()
+    # db.close() 
+    # return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
+    try:
+        """split documents into chunks, create embeddings, store embeddings in chromaDB"""
+        chunk_size = 1000
+        chunk_overlap=200
+        current_dir = os.getcwd()
+        print(f"chunk_and_embed directory==== {current_dir}")
+        loader = DirectoryLoader(f'./rag_data/stage_data/{user_id}', glob="./*.pdf", loader_cls=PyPDFLoader)
+        documents = loader.load()
+        print(f' number of documents {len(documents)}')
+        #splitting the text into
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        texts = text_splitter.split_documents(documents)
+        print(f' number of chunks {len(texts)}')
 
+        persist_directory = f'rag_data/custom_db/{user_id}/{input_directory}'
+        t1 = time.perf_counter()
+        Chroma.from_documents(documents=texts,
+                                        embedding=configs.embedding,
+                                        persist_directory=persist_directory)
+        t2 = time.perf_counter()
+        print(f'time taken to embed {len(texts)} chunks:',t2-t1)
+        print(f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes')
+        print(f'time taken to embed {len(texts)} chunks:,{((t2-t1)/60)/60} hours')
 
-    print(f"Moved {len(files)} files from {src_dir} to {dst_dir}.")
-    print(f"Files moved: {files}")
-    print("\n".join(files))
-    return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
+        src_dir = f'./rag_data/stage_data/{user_id}'
+        dst_dir = f'./rag_data/data/{user_id}/{input_directory}'
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
+
+        files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir, f))]
+
+        if not is_privacy:
+            for file in files:
+                src_file_path = os.path.join(src_dir, file)
+                dst_file_path = os.path.join(dst_dir, file)
+                shutil.move(src_file_path, dst_file_path)
+        else:
+            for file in files:
+                src_file_path = os.path.join(src_dir, file)
+                os.remove(src_file_path)
+
+        print(f"Moved {len(files)} files from {src_dir} to {dst_dir}.")
+        print(f"Files moved: {files}")
+        print("\n".join(files))
+        sql_query = text("""
+                         DELETE FROM running_pipelines 
+                         WHERE uid = :uid AND rag = :rag
+                         """)
+        db.execute(sql_query, {'uid': user_id, 'rag': input_directory})
+        db.commit()
+        return f'time taken to embed {len(texts)} chunks:,{(t2-t1)/60} minutes'
+    except Exception as e:
+        db.rollback()  # Rollback in case of an exception
+        print(f"Error: {e}")
+        # Handle the exception as needed
+    finally:
+        db.close() 
+        
 
 
 

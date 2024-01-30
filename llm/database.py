@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 # import models
 from models import *
+from base import Base  # Import Base from base.py
+
 load_dotenv()
 os.environ['SQLALCHEMY_DATABASE_URL']
 api_key = os.environ["SQLALCHEMY_DATABASE_URL"]

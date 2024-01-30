@@ -1,4 +1,4 @@
-from database import Base
+from base import Base
 from sqlalchemy import Column, Integer, ARRAY, String, TIMESTAMP, Boolean, text, UniqueConstraint
 
 
@@ -26,15 +26,6 @@ class UserConvos(Base):
     created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))
 
 
-# class UserRagConfigs(Base):
-#     __tablename__ = "user_rag_configs"
-
-#     id = Column(Integer,primary_key=True,nullable=False)
-#     uid = Column(String,nullable=False)
-#     rag = Column(String,nullable=False)
-#     system_prompt = Column(String,nullable=False)
-#     # __table_args__ = (UniqueConstraint('uid', 'rag'),)
-
 class UserRagConfigs(Base):
     __tablename__ = 'user_rag_configs'
     uid = Column(String, primary_key=True)
@@ -45,3 +36,9 @@ class UserRagConfigs(Base):
 class PrivateUsers(Base):
     __tablename__ = 'private_users'
     uid = Column(String, primary_key=True)
+
+class RunningPipelines(Base):
+    __tablename__ = 'running_pipelines'
+    uid = Column(String, primary_key=True)
+    rag = Column(String, primary_key=True)
+    # created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))

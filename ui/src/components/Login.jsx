@@ -67,11 +67,6 @@ const Login = () => {
                     />
                     <FormErrorMessage>{loginError}</FormErrorMessage>
                 </FormControl>
-                {/* <Button isLoading={isLoading} type="submit" colorScheme='blue' w="full" my={2}
-                    _hover={{
-                        bgGradient: 'linear(to-r, red.500, yellow.500)',
-                    }}>Login
-                </Button> */}
                 <Button 
                     type="primary" 
                     htmlType="submit" 
