@@ -128,7 +128,15 @@ const Chat = () => {
                 <Flex direction="column" alignItems="flex-end">
                   <Box boxShadow="md" borderWidth="1px" borderColor="gray.200" borderRadius='md' p={2}>
                   <Flex alignItems="center">
-                        <Text flex="1"  textAlign="left" borderRadius="md" onClick={()=> setValue(message.text)}>{message.text}</Text>
+                  <Text flex="1" textAlign="left" borderRadius="md" onClick={()=> setValue(message.text)}>
+                    {message.text.split('\n').map((line, index, array) => (
+                        <React.Fragment key={index}>
+                        {line}
+                        {index !== array.length - 1 &&  <br />}
+                        </React.Fragment>
+                    ))}
+                    </Text>
+
                         <Flex direction="column">
                           <IconButton
                               aria-label="Copy message"

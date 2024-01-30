@@ -37,14 +37,20 @@ import Loader from "./Loader";
 import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
 import * as pdfjsLib from 'pdfjs-dist';
 
-const pdfjs = await import('pdfjs-dist/build/pdf');
-const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+let pdfjs;
+let pdfjsWorker;
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+async function pdf() {
+    pdfjs = await import('pdfjs-dist/build/pdf');
+    pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+    pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+}
 const { Dragger } = Upload;
 
 function CustomUpload() {
+    pdf()
   const [ragName, setRagName] = useState('')
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
@@ -144,7 +150,7 @@ function CustomUpload() {
             try {
               const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
               console.log(`Number of Pages in file ${file.name}: `, pdf.numPages);
-              setUploadTimeEstimate(Math.round(((pdf.numPages)*0.5)/60))
+              setUploadTimeEstimate(Math.round(((pdf.numPages)*1.25)/60))
               // Do something with the number of pages...
             } catch (error) {
               console.error("Error reading PDF file:", error);
