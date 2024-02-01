@@ -6,12 +6,12 @@ class PostBase(BaseModel):
     title: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CreatePost(PostBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserConvosBase(BaseModel):
@@ -23,12 +23,12 @@ class UserConvosBase(BaseModel):
     system_prompt: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CreateUserConvo(UserConvosBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserConvoHistoryBase(BaseModel):
@@ -40,12 +40,12 @@ class UserConvoHistoryBase(BaseModel):
     created_at: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CreateUserConvoHistoryBase(UserConvosBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -53,8 +53,8 @@ class UserRagConfigsBase(BaseModel):
     # rag: str
     system_prompt: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateUserRagConfigs(UserRagConfigsBase):
     class Config:
-        orm_mode = True
+        from_attributes = True

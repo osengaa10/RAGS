@@ -8,19 +8,31 @@ from typing import Any, Dict, List, Mapping, Optional
 from fastapi import FastAPI
 
 from pydantic import Extra, Field, root_validator, model_validator
-
+import langchain
+import langchain_community
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
 from langchain.llms.utils import enforce_stop_tokens
 from langchain.utils import get_from_dict_or_env
-from langchain.vectorstores import Chroma
+# from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
+# from langchain_community.document_loaders import PDFMinerLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain.chains import RetrievalQA
-from langchain.document_loaders import TextLoader
-from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import DirectoryLoader
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+# from langchain.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader
+
+# from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
+# from langchain_community.document_loaders import PDFMinerLoader
+from langchain.document_loaders import PDFMinerLoader
+
+# from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
+# from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 import configs
 from sqlalchemy import text
 from database import SessionLocal
@@ -32,7 +44,8 @@ from database import SessionLocal
 # split documents into chunks, create embeddings, store embeddings in chromaDB #
 ################################################################################
 def chunk_and_embed(user_id, input_directory, is_privacy):
-
+    print(f"langchain_community.__version__!!!!!!!!! {langchain_community.__version__} ")
+    print(f"langchain.__version__!!!!!!!!! {langchain.__version__} ")
     db = SessionLocal()
     try:
         """split documents into chunks, create embeddings, store embeddings in chromaDB"""
@@ -41,6 +54,9 @@ def chunk_and_embed(user_id, input_directory, is_privacy):
         current_dir = os.getcwd()
         print(f"=========== DirectoryLoader: {current_dir} ===========")
         loader = DirectoryLoader(f'./rag_data/stage_data/{user_id}', glob="./*.pdf", loader_cls=PyPDFLoader)
+        # loader = DirectoryLoader(f'./rag_data/stage_data/{user_id}', glob="./*.pdf", loader_cls=PDFMinerLoader)
+
+        # loader = PyPDFDirectoryLoader(f'./rag_data/stage_data/{user_id}')
         print(f' =========== loader.load() =========== ')
         documents = loader.load()
         print(f' =========== number of documents {len(documents)} =========== ')

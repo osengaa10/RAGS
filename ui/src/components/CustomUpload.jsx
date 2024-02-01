@@ -209,11 +209,15 @@ function CustomUpload() {
             })
         } 
         
-        if (selectedFiles.length !== 0 && ragName !=='') {
+        if (selectedFiles.length !== 0 && ragName !== '') {
             setUploading(true)
             const formData = new FormData();
             selectedFiles.forEach((file, index) => {
-            formData.append(`files`, file);
+                // Create a new File object with a sanitized name
+                const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.]/g, "_"); 
+                const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
+        
+                formData.append(`files`, sanitizedFile);
             });
             formData.append(`input_directory`, ragName)
             formData.append(`user_id`, currentUser.uid)
@@ -229,7 +233,6 @@ function CustomUpload() {
                 console.error('Error uploading file:', error);
                 setUploading(false)
             });
-    
         }
     }
 

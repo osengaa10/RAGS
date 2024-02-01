@@ -1,14 +1,15 @@
-import os
-import together
+# import os
+# import together
 import textwrap
 from typing import Any, Dict
 import json
 from pydantic import Extra
 from langchain.llms.base import LLM
 from langchain.utils import get_from_dict_or_env
-from langchain.vectorstores import Chroma
+# from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+# from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
 from langchain.chains.conversation.memory import ConversationKGMemory

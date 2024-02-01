@@ -220,7 +220,7 @@ async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[Upl
         os.makedirs(f'./rag_data/stage_data/{user_id}/')
     for file in files:
         try:
-            with open(file.filename, 'rb') as f:
+            with open(file.filename, 'wb') as f:
                 shutil.copyfileobj(file.file, f)
                 # print(f"upload_to_vector_db dir==== {os.getcwd()}")
                 shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{user_id}/{file.filename}")

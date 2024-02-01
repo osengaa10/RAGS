@@ -5,9 +5,10 @@ from typing import Any, Dict
 from pydantic import Extra
 from langchain.llms.base import LLM
 from langchain.utils import get_from_dict_or_env
-from langchain.vectorstores import Chroma
+# from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+# from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
