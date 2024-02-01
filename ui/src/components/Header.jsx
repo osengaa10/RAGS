@@ -97,7 +97,7 @@ const Header = (props) => {
                     {runningRags.map((vDB) => (
                         <Menu.Item key={vDB} disabled>
                             <Spin size="small"/> &nbsp;
-                               {vDB} is in progress
+                               {vDB}
                         </Menu.Item>
                     ))}
                     {vectorDBList.map((vDB) => (
@@ -119,6 +119,12 @@ const Header = (props) => {
     const renderDesktopMenu = () => (
         <Menu onClick={onClick} selectedKeys={[current]} mode={isMobile ? "vertical" : "horizontal"} theme="light">
             <SubMenu key="h" icon={<MessageOutlined />} title={<Link to="/" onClick={onClose}>Chat</Link>}>
+            {runningRags.map((vDB) => (
+                        <Menu.Item key={vDB} disabled>
+                            <Spin size="small"/> &nbsp;
+                               {vDB}
+                        </Menu.Item>
+                    ))}
                 {vectorDBList.map((vDB) => (
                     <Menu.Item key={vDB} onClick={() => handleSelectRAG(vDB)}>
                         <Link to="/" onClick={onClose}>{vDB}</Link>

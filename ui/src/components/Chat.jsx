@@ -8,12 +8,6 @@ import {
     IconButton,
     useBreakpointValue,
     Divider,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerOverlay,
-    DrawerContent,
-    DrawerCloseButton,
     useDisclosure,
     Flex,
     Heading,
@@ -29,14 +23,28 @@ import {
     PopoverCloseButton,
     PopoverHeader,
     PopoverBody,
-    Tooltip
+    PopoverFooter,
+    Tooltip,
+    Textarea
 } from '@chakra-ui/react';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { useAuthValue } from "../AuthContext"
-import { HamburgerIcon, CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
+import { CopyIcon, CheckIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
+import { 
+    InboxOutlined, 
+    InfoCircleOutlined, 
+    CloudSyncOutlined, 
+    PlusOutlined,
+    EyeOutlined,
+    DeleteOutlined,
+    
+  } from '@ant-design/icons';
 import Loader from './Loader'
 import KnowledgeBaseDropdown from './KnowledgeBaseDropdown'
 import { useClipboard } from '@chakra-ui/react';
+import PrivacyModeSystemPrompt from './PrivacyModeSystemPrompt'
+import SystemPromptExampleModal from './SystemPromptExampleModal';
+
 
 const Chat = () => {
   const { onCopy, value, setValue, hasCopied } = useClipboard("");
@@ -55,6 +63,7 @@ const Chat = () => {
     messages,
     setMessages,
     systemPrompt,
+    setSystemPrompt
   } = useAuthValue()
 
     const scrollToBottom = () => {
@@ -71,7 +80,7 @@ const Chat = () => {
     // if (prompt.trim()) {
     setLoading(true)
     console.log("systemPrompt::: ", systemPrompt)
-    axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid, system_prompt: systemPrompt})
+    axiosBaseUrl.post(`/qa`, {query: prompt, input_directory: vectorDB, user_id: currentUser.uid, system_prompt: systemPrompt, privacy_mode: isPrivacyMode})
         .then((response) => {
             setAnswer(response.data.answer)
             setLoading(false)
@@ -99,12 +108,11 @@ const Chat = () => {
         .catch((e) => {
         console.log(`llm error ${e}`)
         alert('Api screwed up')
+        setLoading(false)
         }) 
     setPrompt('');
   };
 
-  const width = useBreakpointValue({ base: '99%', md: '400px' });
-  const maxHeight = useBreakpointValue({ base: '60vh', md: '300px' });
 
   return (
     <>
@@ -212,19 +220,68 @@ const Chat = () => {
             onChange={(e) => setPrompt(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
           />
+          
+          {isPrivacyMode ?
+          <>
+            {/* <Flex direction='row' justifyContent="space-between" alignItems="center"> */}
+            <Button colorScheme="blue"  onClick={handleSendMessage}>
+              Send
+            </Button>
+            <Text >Current system prompt</Text>
+            <Flex justifyContent="center" alignItems="center">
+            <Textarea
+              placeholder="System prompt..."
+              value={systemPrompt}
+            //   onBlur={handleBlur}
+              onChange={(e) => setSystemPrompt(e.target.value)}
+              resize={'vertical'} 
+            //   minH={'150px'}
+              style={{ width: '90vw'}}
+            />
+            <Flex direction='column'>
+            <Popover>
+              <PopoverTrigger>
+                <IconButton
+                  aria-label="Info about system prompt"
+                  icon={<InfoCircleOutlined />}
+                  size="sm"
+                  ml={2}
+                />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader>System Prompt Explanation</PopoverHeader>
+                <PopoverBody>
+                  The system prompt is a predefined input that helps guide the system's response generation.
+                </PopoverBody>
+                <PopoverFooter>
+                  <SystemPromptExampleModal />
+                </PopoverFooter>
+              </PopoverContent>
+            </Popover>
+            
+            <IconButton
+                  aria-label="Info about system prompt"
+                  icon={<DeleteOutlined />}
+                  size="sm"
+                  ml={2}
+                  onClick={() => setSystemPrompt('')}
+                />
+          </Flex>
+          </Flex>
+        
+            </>
+             
+           :
+           <Flex direction='row'>
           <Button colorScheme="blue" onClick={handleSendMessage}>
             Send
           </Button>
+          </Flex>
+        }
         </>
           :
-        //   <Text
-        //   color='gray.700'
-        //   fontSize='xl'
-        //   // fontWeight='bold'
-        //   textAlign='center'
-        // >
-        //   Select knowledge base
-        // </Text>
         <KnowledgeBaseDropdown />
         }
         

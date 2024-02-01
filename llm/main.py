@@ -39,6 +39,7 @@ class Prompt(BaseModel):
     input_directory: str
     user_id: str
     system_prompt: str
+    privacy_mode: bool
 
 class Rag(BaseModel):
     user_id: str
@@ -108,10 +109,9 @@ async def fetch_rag_configs(request_body: Rag, db: Session = Depends(get_db)):
     if system_prompt_row is not None:
         # Extract system_prompt value from the row
         system_prompt = system_prompt_row[0]  # Assuming system_prompt is the first column
-        print(f"system_prompt::: {system_prompt}")
         return system_prompt  # Return the system_prompt value as a string
     else:
-        return "No system prompt found for the given user and rag name."
+        return "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible using the context text provided. Your answers should only answer the question once and not have any text after the answer is done. If a question does not make any sense, or is not factually coherent, provide what information is needed for the question to be answered. If you don't know the answer to a question, please ask follow up questions that could lead you to the correct answer."
 
 @prefix_router.post("/jobs_in_progress") 
 async def fetch_rag_configs(request_body: QueryRequest, db: Session = Depends(get_db)):
@@ -123,7 +123,6 @@ async def fetch_rag_configs(request_body: QueryRequest, db: Session = Depends(ge
     if running_rag_row is not None:
         # Extract system_prompt value from the row
         running_rag = running_rag_row[0]  # Assuming system_prompt is the first column
-        print(f"running_rag::: {running_rag}")
         return [running_rag]  # Return the system_prompt value as a string
     else:
         return []
@@ -186,13 +185,19 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
     query = json.dumps(item.query)
     uid = item.user_id
     rag_name = item.input_directory
+    privacy_mode = item.privacy_mode
     system_prompt = item.system_prompt
     # fix for privacy users
-    sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
-    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
-    row = result.fetchone()
-    system_prompt_str = row[0]
-    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt_str)
+    if privacy_mode:
+        system_prompt = item.system_prompt
+    else:
+        sql_query = text("SELECT system_prompt FROM user_rag_configs WHERE uid = :uid and rag = :rag_name")
+        result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+        row = result.fetchone()
+        system_prompt = row[0]
+    
+    print(f"system_prompt before create_chain:::: {system_prompt}")
+    qa_chain = create_user_chain(item.user_id, item.input_directory, system_prompt)
     llm_response = qa_chain(query)
     wrap_text_preserve_newlines(llm_response['result'])
     sources = []
@@ -215,9 +220,9 @@ async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[Upl
         os.makedirs(f'./rag_data/stage_data/{user_id}/')
     for file in files:
         try:
-            with open(file.filename, 'wb') as f:
+            with open(file.filename, 'rb') as f:
                 shutil.copyfileobj(file.file, f)
-                print(f"upload_to_vector_db dir==== {os.getcwd()}")
+                # print(f"upload_to_vector_db dir==== {os.getcwd()}")
                 shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{user_id}/{file.filename}")
         except Exception:
             return {"message": f"Error: {Exception})"}
@@ -237,17 +242,14 @@ async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[Upl
         return {"message": "You already have a running pipeline."}
     else:
         background_tasks.add_task(chunk_and_embed, user_id, input_directory, is_privacy)
-        # return chunk_and_embed(user_id, input_directory, is_privacy)
         return {"message": "The data pipeline has begun and is running. You will be notified upon completion."}
 
-    # return chunk_and_embed(user_id, input_directory, is_privacy)
 
 
 
 
 @prefix_router.get("/databases/{userId}") 
 async def fetch_vector_databases(userId: str):
-    print(f"checking DIRECTORY./rag_data/custom_db/{userId}")
     try:
         filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     except:
@@ -257,7 +259,6 @@ async def fetch_vector_databases(userId: str):
 
 @prefix_router.get("/sourcefiles/{userId}/{ragName}") 
 async def fetch_source_files(userId: str, ragName: str):
-    print(f"checking DIRECTORY./rag_data/data/{userId}/{ragName}")
     try:
         sourceFilenames = os.listdir(f"./rag_data/data/{userId}/{ragName}")
     except:
@@ -275,7 +276,6 @@ async def download_file(filename: str, ragName: str, userId: str):
 
 @prefix_router.post("/delete") 
 async def delete_vector_database(item: Rag):
-    print(f"checking DIRECTORY./rag_data/custom_db/{item.user_id}/{item.input_directory}")
     # filenames = os.listdir(f"./rag_data/custom_db/{userId}")
     # Path to the directory to be removed
     directory_path = f'./rag_data/custom_db/{item.user_id}/{item.input_directory}'
@@ -284,15 +284,12 @@ async def delete_vector_database(item: Rag):
     if os.path.exists(archive_path):
         # Remove the directory and all its contents
         shutil.rmtree(archive_path)
-        print(f"Directory '{archive_path}' has been removed.")
     else:
         print(f"Directory '{archive_path}' does not exist.")
     # Check if directory exists
     if os.path.exists(directory_path):
         # Remove the directory and all its contents
         shutil.rmtree(directory_path)
-        print(f"Directory '{directory_path}' has been removed.")
-        # Check if directory exists
     else:
         print(f"Directory '{directory_path}' does not exist.")
    

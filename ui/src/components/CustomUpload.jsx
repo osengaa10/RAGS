@@ -19,28 +19,27 @@ import {
   PopoverCloseButton,
   PopoverHeader,
   PopoverBody,
-  Tooltip
+  Tooltip,
+  PopoverFooter
 } from '@chakra-ui/react';
 import { 
   InboxOutlined, 
-  DownloadOutlined, 
   InfoCircleOutlined, 
   CloudSyncOutlined, 
-  CloudUploadOutlined, 
   PlusOutlined,
   EyeOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  
 } from '@ant-design/icons';
 import { Upload, AutoComplete, Button } from 'antd';
 import { useAuthValue } from "../AuthContext";
 import Loader from "./Loader";
-import PDFViewerModal from './PDFViewerModal'; // Adjust the import path as needed
+import PDFViewerModal from './PDFViewerModal';
+import SystemPromptExampleModal from './SystemPromptExampleModal';
 import * as pdfjsLib from 'pdfjs-dist';
 
 let pdfjs;
 let pdfjsWorker;
-
-// pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 async function pdf() {
     pdfjs = await import('pdfjs-dist/build/pdf');
@@ -54,8 +53,6 @@ function CustomUpload() {
   const [ragName, setRagName] = useState('')
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false)
-  const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
-  // const [vectorDBList, setVectorDBList] = useState([])
   const [selectedOption, setSelectedOption] = useState('');
   const [searchedValue, setSearchedValue] = useState('');
   const [uploadTimeEstimate, setUploadTimeEstimate] = useState(null)
@@ -63,9 +60,7 @@ function CustomUpload() {
   const [pdfFileBlob, setPdfFileBlob] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState(null);
-  // const [systemPrompt, setSystemPrompt] = useState('');
-  const [ragConfigs, setRagConfigs] = useState()
-
+  
 
   
   let navigate = useNavigate();
@@ -74,18 +69,13 @@ function CustomUpload() {
   const { 
     currentUser, 
     isPrivacyMode,
-    setIsPrivacyMode,
     vectorDBList,
     setVectorDBList,
-    vectorDB,
-    setVectorDB,
-    messages,
-    setMessages,
-    convoHistory,
-    setConvoHistory,
     systemPrompt,
     setSystemPrompt
    } = useAuthValue()
+
+   const [revertSystemPrompt, setRevertSystemPrompt] = useState(systemPrompt);
 
   const options = vectorDBList.map((item, index) => {
     return { label: item, value: String(index + 1) };
@@ -100,25 +90,20 @@ function CustomUpload() {
     fetchDatabases()
   },[])
 
-  useEffect(() => {
-    setTempPrompt(systemPrompt);
-  }, [systemPrompt]);
-
-  const handleFocus = () => {
-    setTempPrompt('');
-  };
-
   const handleBlur = () => {
-    if (tempPrompt.trim() === '') {
-      setTempPrompt(systemPrompt);
+    if (systemPrompt.trim() === '') {
+      setSystemPrompt(revertSystemPrompt);
+      console.log("systemPrompt:: ", systemPrompt)
+      console.log("revertSystemPrompt:: ", revertSystemPrompt)
+
     }
   };
 
   const handleChange = (e) => {
-    setTempPrompt(e.target.value);
+    setSystemPrompt(e.target.value);
   };
 
-  const [tempPrompt, setTempPrompt] = useState(systemPrompt);
+  
   
   let props = {
     name: 'file',
@@ -168,6 +153,7 @@ function CustomUpload() {
     axiosBaseUrl.get(`/databases/${currentUser.uid}`)
       .then((response) =>{
         setVectorDBList(response.data)
+        setSystemPrompt('')
       })
    }
 
@@ -178,6 +164,7 @@ function CustomUpload() {
     axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
       .then((response) => {
         setSystemPrompt(response.data)
+        setRevertSystemPrompt(response.data)
       })
     axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${option.label}`)
       .then((response) => {
@@ -189,7 +176,9 @@ function CustomUpload() {
   const onChange = (data, option) => {
     setSearchedValue(data);
     setRagName(data)
-    setSelectedOption(option); // to remove selected option when user types  something wich doesn't match with any option
+    setSelectedOption(option);
+    setSystemPrompt('')
+    setSourceFiles([])
   };
 
 
@@ -293,36 +282,51 @@ function CustomUpload() {
           />
           
         </Flex>
-
-        <Flex justifyContent="center" alignItems="center">
-          <Textarea
-            placeholder="System prompt..."
-            value={tempPrompt}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            size='lg'
-            style={{ width: inputWidth }} 
-          />
-          <Popover>
-            <PopoverTrigger>
-              <IconButton
-                aria-label="Info about system prompt"
-                icon={<InfoCircleOutlined />}
-                size="sm"
-                ml={2}
-              />
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverArrow />
-              <PopoverCloseButton />
-              <PopoverHeader>System Prompt Explanation</PopoverHeader>
-              <PopoverBody>
-                The system prompt is a predefined input that helps guide the system's response generation.
-              </PopoverBody>
-            </PopoverContent>
-          </Popover>
-        </Flex>
+            {isPrivacyMode ?
+            <></>
+            :
+            <Flex justifyContent="center" alignItems="center">
+            <Textarea
+              placeholder="System prompt..."
+              value={systemPrompt}
+              // onFocus={handleFocus}
+              onBlur={handleBlur}
+              onChange={handleChange}
+              style={{ width: inputWidth }} 
+            />
+            <Flex direction='column'>
+            <Popover>
+              <PopoverTrigger>
+                <IconButton
+                  aria-label="Info about system prompt"
+                  icon={<InfoCircleOutlined />}
+                  size="sm"
+                  ml={2}
+                />
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverArrow />
+                <PopoverCloseButton />
+                <PopoverHeader>System Prompt Explanation</PopoverHeader>
+                <PopoverBody>
+                  The system prompt is a predefined input that helps guide the system's response generation.
+                </PopoverBody>
+                <PopoverFooter>
+                  <SystemPromptExampleModal />
+                </PopoverFooter>
+              </PopoverContent>
+            </Popover>
+            
+            <IconButton
+                  aria-label="Info about system prompt"
+                  icon={<DeleteOutlined />}
+                  size="sm"
+                  ml={2}
+                  onClick={() => setSystemPrompt('')}
+                />
+          </Flex>
+          </Flex>
+            }
 
         <Dragger {...props}>
           <p className="ant-upload-drag-icon">
@@ -378,14 +382,25 @@ function CustomUpload() {
         <Divider />
 
         <VStack spacing={4}>
-        <Text
+            {isPrivacyMode ?
+            <Text
             color='gray.700'
             fontSize='l'
-            // fontWeight='semibold'
+            mr={4}
+          >
+            Privacy mode accounts do not store files
+          </Text>
+          :
+          <Text
+            color='gray.700'
+            fontSize='l'
             mr={4}
           >
             Knowledge base files:
           </Text>
+
+            }
+        
           {sourceFiles.map((file, index) => (
             <HStack key={index} justify="space-between">
               <Text isTruncated>{file}</Text>

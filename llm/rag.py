@@ -130,6 +130,9 @@ def create_user_chain(user_id, input_directory, system_prompt):
     Question: {question}"""
     SYSTEM_PROMPT = B_SYS + PARAMETERIZED_SYSTEM_PROMPT + E_SYS
     prompt_template =  B_INST + SYSTEM_PROMPT + instruction + E_INST
+    print(f"================create_user_chain system_prompt================")
+    print(prompt_template)
+    print(f"================create_user_chain system_prompt================")
     llama_prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question", "chat_history"]
     )

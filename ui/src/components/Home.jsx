@@ -13,6 +13,7 @@ import { useAuthValue } from "../AuthContext"
 import PrivacyLoader from './PrivacyLoader';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { notification, message } from 'antd';
 
 
 function Home() {
@@ -64,6 +65,13 @@ function Home() {
    .then((response) =>{
     setRunningRags(response.data)
        console.log("rags response :::", response.data)
+       if(response.data.length > 0) {
+        message.loading({ content: `${response.data} is in progress`, key: 'runningRags' });
+        // Close the message after 2 seconds
+        setTimeout(() => {
+          message.destroy('runningRags');
+        }, 2000);
+      }
    })
      
 }, [])

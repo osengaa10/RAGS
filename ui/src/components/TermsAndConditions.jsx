@@ -28,7 +28,7 @@ const TermsAndConditions = () => {
         onCancel={handleCancel}
         centered
         width="90vw"
-        style={{ maxHeight: '90vh', overflowY: 'auto' }}  // Setting max height and allowing vertical scroll
+        style={{ maxHeight: '90vh'}} 
         >
         <p style={{ textAlign: 'center' }}>lol</p>
         </Modal>

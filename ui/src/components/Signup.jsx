@@ -33,6 +33,7 @@ import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { Button } from 'antd';
 import TermsAndConditions from './TermsAndConditions';
+import PrivacyModalExplantaion from './PrivacyModalExplanation';
 
 
 
@@ -116,43 +117,7 @@ const Signup = () => {
                 </FormControl>
                 <Flex alignItems="center" mb={4}>
                     <Switch id="privacy-mode" onChange={() => togglePrivacyMode(!isPrivacyMode)} isChecked={isPrivacyMode} />
-                    <FormLabel htmlFor="privacy-mode" ml={2}>Privacy Mode</FormLabel>
-                    <Popover >
-                            <Tooltip label="What is privacy mode?" hasArrow>
-                            <Box display="inline-block">
-                            <PopoverTrigger>
-                            <IconButton
-                                  aria-label="View system prompt"
-                                  icon={<QuestionOutlineIcon />}
-                                  size="sm"
-                                  varia nt="ghost"
-                                  ml={2}
-                                />
-                           
-                            </PopoverTrigger>
-                            </Box>
-                            </Tooltip>
-                            <PopoverContent style={{ color: 'black' }}>
-                                <PopoverArrow />
-                                <PopoverCloseButton />
-                                <PopoverHeader>Privacy measures:</PopoverHeader>
-                                <PopoverBody>
-                                <UnorderedList align="left">
-                                    <ListItem>Raw PDF files will never be archived in any way.</ListItem>
-                                    <ListItem>Only embeddings of the PDFs will be maintained until you chose to delete them.</ListItem>
-                                    <ListItem>A privacy enabled account will never touch a database.</ListItem>
-                                </UnorderedList>
-                                </PopoverBody>
-                                <PopoverHeader>Feature limitations:</PopoverHeader>
-                                <PopoverBody>
-                                <UnorderedList align="left">
-                                    <ListItem>No conversational history.</ListItem>
-                                    <ListItem>Cannot view or download PDFs in your knowledge bases</ListItem>
-                                    <ListItem>To use a custom system prompt, it will need to be specified for each prompt.</ListItem>
-                                </UnorderedList>
-                                </PopoverBody>
-                            </PopoverContent>
-                          </Popover>
+                    <PrivacyModalExplantaion />
                 </Flex>
                 <Button 
                     type="primary" 
