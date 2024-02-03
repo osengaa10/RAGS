@@ -214,7 +214,7 @@ function CustomUpload() {
             const formData = new FormData();
             selectedFiles.forEach((file, index) => {
                 // Create a new File object with a sanitized name
-                const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.]/g, "_"); 
+                const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").replace(/['",]/g, "");
                 const sanitizedFile = new File([file], sanitizedFileName, { type: file.type });
         
                 formData.append(`files`, sanitizedFile);
@@ -243,6 +243,7 @@ function CustomUpload() {
       axiosBaseUrl.post('/delete', {user_id: currentUser.uid, input_directory: ragName})
       .then(response => {
         setSearchedValue('')
+        setSourceFiles([])
       fetchDatabases()
       })
       .catch(error => {
@@ -405,8 +406,16 @@ function CustomUpload() {
             }
         
           {sourceFiles.map((file, index) => (
-            <HStack key={index} justify="space-between">
-              <Text isTruncated>{file}</Text>
+            <>
+            <VStack key={index} justify="space-between">
+                <Text style={{
+                // maxWidth: '60vw', // Ensures the text container doesn't exceed the parent's width
+                overflowWrap: 'break-word', // Allow long words to break and wrap onto the next line
+                wordBreak: 'break-word', // Use this for better cross-browser support
+                textAlign: 'left'
+                }}>
+                    {file}
+                </Text>
               <Tooltip title="search">
               <Button
                type="primary"
@@ -416,7 +425,9 @@ function CustomUpload() {
                View PDF
              </Button>
              </Tooltip>
-            </HStack>
+            </VStack>
+             <Divider />
+             </>
           ))}
           {pdfFileBlob && (
             <PDFViewerModal

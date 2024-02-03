@@ -11,6 +11,7 @@ llm/custom_db
 ui/dist/
 /llm/rag_data/
 llm/rags-venv/
+llm/pure_venv/
 llm/venv
 llm/router/__pycache__
 llm/.env*
