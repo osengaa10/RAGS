@@ -18,6 +18,10 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette import status
 import schemas
+from pypdf import PdfReader, PdfWriter
+import re
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import router.posts
 
 models.Base.metadata.create_all(bind=engine)
@@ -214,20 +218,67 @@ async def read_question(item: Prompt, db: Session = Depends(get_db)):
     }
 
 
+# Utility function to sanitize PDFs
+def sanitize_pdf(input_path, output_path):
+    reader = PdfReader(input_path)
+    writer = PdfWriter()
+
+    for page in reader.pages:
+        writer.add_page(page)
+
+    with open(output_path, 'wb') as output_pdf:
+        writer.write(output_pdf)
+
+def clean_text(text):
+    """
+    Function to clean the text extracted from the PDF.
+    This can include removing page numbers, headers, footers, and correcting line breaks.
+    Adjust the regex patterns according to the specific artifacts observed in the text.
+    """
+    # Example: Remove typical footer text or page numbers
+    text = re.sub(r'Page \d+ of \d+', '', text)
+    # Remove any other patterns specific to your PDF here
+    # Replace unnecessary line breaks (if a line break is not followed by a capital letter or a specific marker)
+    text = re.sub(r'(?<!\n)\n(?![A-Z])', ' ', text)
+    return text
+
+
+def sanitize_pdf(input_path, output_path):
+    reader = PdfReader(input_path)
+    # Initialize a PDF canvas for writing cleaned text
+    c = canvas.Canvas(output_path, pagesize=letter)
+    for page_number, page in enumerate(reader.pages, start=1):
+        text = page.extract_text()
+        if text:
+            cleaned_text = clean_text(text)
+            # For simplicity, add the cleaned text in one go; this might need adjustments for text placement
+            c.drawString(72, 720, cleaned_text)  # Starting position; may need adjustment
+        c.showPage()  # Finish the current page
+    c.save()
+
 @prefix_router.post("/chunk_and_embed")
 async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...), is_privacy: bool = Form(...), db: Session = Depends(get_db)):
-    if not os.path.exists(f'./rag_data/stage_data/{user_id}/'):
-        os.makedirs(f'./rag_data/stage_data/{user_id}/')
+    staging_path = f'./rag_data/stage_data/{user_id}/'
+    if not os.path.exists(staging_path):
+        os.makedirs(staging_path)
     for file in files:
         try:
-            with open(file.filename, 'wb') as f:
+            temp_path = f"./temp_{file.filename}"
+            with open(temp_path, 'wb') as f:
                 shutil.copyfileobj(file.file, f)
-                # print(f"upload_to_vector_db dir==== {os.getcwd()}")
-                shutil.move(f"./{file.filename}", f"./rag_data/stage_data/{user_id}/{file.filename}")
+                print("1......copy of file made")
+
+             # Sanitize the PDF file
+            sanitized_path = f"{staging_path}{file.filename}"
+            sanitize_pdf(temp_path, sanitized_path)
+            print("2......... file sanitized and moved to staging")
         except Exception:
             return {"message": f"Error: {Exception})"}
         finally:
             file.file.close()
+             # Clean up the temporary file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
     sql_query = text("""
                     INSERT INTO running_pipelines (uid, rag)
                     VALUES (:uid, :rag)
@@ -241,6 +292,8 @@ async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[Upl
     if result is None:
         return {"message": "You already have a running pipeline."}
     else:
+        print("3.......... chunk_and_embed starting")
+        # chunk_and_embed(user_id, input_directory, is_privacy)
         background_tasks.add_task(chunk_and_embed, user_id, input_directory, is_privacy)
         return {"message": "The data pipeline has begun and is running. You will be notified upon completion."}
 

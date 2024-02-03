@@ -6,10 +6,11 @@ import json
 from pydantic import Extra
 from langchain.llms.base import LLM
 from langchain.utils import get_from_dict_or_env
-# from langchain.vectorstores import Chroma
-from langchain_community.vectorstores import Chroma
+from langchain.vectorstores import Chroma
+# from langchain_community.vectorstores import Chroma
+# from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-# from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
 from langchain.chains.conversation.memory import ConversationKGMemory
@@ -105,7 +106,7 @@ def create_user_chain(user_id, input_directory, system_prompt):
     """create the chain to answer questions"""
 
     # PARAMETERIZED_SYSTEM_PROMPT = f"""
-    # You have 30 years experience practicing oncology. Always answer the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. If you don't know the answer to a question, please don't share false information.
+# You have 30 years experience practicing oncology. Always answer the question as helpfully as possible, or provide a detailed treatment regimen using the context text provided. The treatment regimen should specify medication dosages, timelines and enough information colleagues to begin treatment. If you don't know the answer to a question, please don't share false information.
     
     # # """
 
