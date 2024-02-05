@@ -26,13 +26,8 @@ function Home() {
     vectorDBList,
     setVectorDBList,
     setConvoHistory,
-    messages,
-    convoHistory,
-    setMessages,
     setRunningRags,
-    runningRags
   } = useAuthValue()
-
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
   useEffect(()=>{
     onAuthStateChanged(auth, (user) => {

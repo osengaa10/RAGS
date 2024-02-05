@@ -14,9 +14,6 @@ services:
   backend:
     image: intergalactictrash/rags-backend
     build: ./llm
-    # command: ["dockerize", "-wait", "tcp://db:5432", "-timeout", "60s", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-    # ports:
-    #   - "8000:8000"
     volumes:
       - /home/austin/rag_data:/app/rag_data
     depends_on:
@@ -34,8 +31,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # ports:
-    #   - "5432:5432"
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
     networks:

@@ -19,9 +19,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 import schemas
 from pypdf import PdfReader, PdfWriter
-import re
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+
 import router.posts
 
 models.Base.metadata.create_all(bind=engine)
@@ -229,32 +227,6 @@ def sanitize_pdf(input_path, output_path):
     with open(output_path, 'wb') as output_pdf:
         writer.write(output_pdf)
 
-def clean_text(text):
-    """
-    Function to clean the text extracted from the PDF.
-    This can include removing page numbers, headers, footers, and correcting line breaks.
-    Adjust the regex patterns according to the specific artifacts observed in the text.
-    """
-    # Example: Remove typical footer text or page numbers
-    text = re.sub(r'Page \d+ of \d+', '', text)
-    # Remove any other patterns specific to your PDF here
-    # Replace unnecessary line breaks (if a line break is not followed by a capital letter or a specific marker)
-    text = re.sub(r'(?<!\n)\n(?![A-Z])', ' ', text)
-    return text
-
-
-def sanitize_pdf(input_path, output_path):
-    reader = PdfReader(input_path)
-    # Initialize a PDF canvas for writing cleaned text
-    c = canvas.Canvas(output_path, pagesize=letter)
-    for page_number, page in enumerate(reader.pages, start=1):
-        text = page.extract_text()
-        if text:
-            cleaned_text = clean_text(text)
-            # For simplicity, add the cleaned text in one go; this might need adjustments for text placement
-            c.drawString(72, 720, cleaned_text)  # Starting position; may need adjustment
-        c.showPage()  # Finish the current page
-    c.save()
 
 @prefix_router.post("/chunk_and_embed")
 async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[UploadFile] = File(...), input_directory: str = Form(...), user_id: str = Form(...), is_privacy: bool = Form(...), db: Session = Depends(get_db)):

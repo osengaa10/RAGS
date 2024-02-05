@@ -59,8 +59,7 @@ function CustomUpload() {
   const [sourceFiles, setSourceFiles] = useState([]);
   const [pdfFileBlob, setPdfFileBlob] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [fileName, setFileName] = useState(null);
-  
+  const [fileName, setFileName] = useState(null);  
 
   
   let navigate = useNavigate();
@@ -125,28 +124,42 @@ function CustomUpload() {
     // },
 
     onChange (e) {
-        let files = (e.fileList).map(object => object.originFileObj);
+        let files = e.fileList.map(object => object.originFileObj);
         setSelectedFiles(files);
-        // Process each file to count the total number of pages
-        files.forEach(file => {
-          const fileReader = new FileReader();
-          fileReader.onload = async (event) => {
-            const typedArray = new Uint8Array(event.target.result);
-            try {
-              const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
-              console.log(`Number of Pages in file ${file.name}: `, pdf.numPages);
-              setUploadTimeEstimate(Math.round(((pdf.numPages)*1.25)/60))
-              // Do something with the number of pages...
-            } catch (error) {
-              console.error("Error reading PDF file:", error);
-            }
-          };
-          fileReader.readAsArrayBuffer(file);
+      
+        // Wrap the page count in a Promise to use with Promise.all
+        const pageCountPromises = files.map(file => {
+          return new Promise((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.onload = async (event) => {
+              const typedArray = new Uint8Array(event.target.result);
+              try {
+                const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+                console.log(`Number of Pages in file ${file.name}: `, pdf.numPages);
+                resolve(pdf.numPages); // Resolve the promise with the number of pages
+              } catch (error) {
+                console.error("Error reading PDF file:", error);
+                reject(error); // Reject the promise in case of an error
+              }
+            };
+            fileReader.readAsArrayBuffer(file);
+          });
+        });
+      
+        // Wait for all the promises to resolve and then sum up the total number of pages
+        Promise.all(pageCountPromises).then(pageCounts => {
+          const totalNumPages = pageCounts.reduce((acc, pageCount) => acc + pageCount, 0);
+          setUploadTimeEstimate(Math.round((totalNumPages * 1.25) / 60));
+        }).catch(error => {
+          // Handle any error that occurred during reading any of the files
+          console.error("An error occurred processing the files", error);
         });
       },
-    onDrop(e) {
-      console.log('Dropped files', e.dataTransfer.files);
-    },
+      
+      onDrop(e) {
+        console.log('Dropped files', e.dataTransfer.files);
+      },
+      
   };
 
    const fetchDatabases = () => {
