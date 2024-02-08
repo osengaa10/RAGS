@@ -14,6 +14,7 @@ import PrivacyLoader from './PrivacyLoader';
 import { axiosBaseUrl } from '../axiosBaseUrl';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { notification, message } from 'antd';
+import SuccessToast from './SuccessToast';
 
 
 function Home() {
@@ -27,6 +28,8 @@ function Home() {
     setVectorDBList,
     setConvoHistory,
     setRunningRags,
+    jobCompleteNotification,
+    setJobCompleteNotification
   } = useAuthValue()
   const [gradients, setGradients] = useState('radial(gray.100, gray.200, gray.300)')
   useEffect(()=>{
@@ -34,12 +37,10 @@ function Home() {
         if (user) {
           // User is signed in, see docs for a list of available properties
           // https://firebase.google.com/docs/reference/js/firebase.User
-          const uid = user.uid;
           axiosBaseUrl.post('/is_private', {user_id: currentUser.uid})
             .then((response) => {
             setIsPrivacyMode(response.data.privacy)
           })
-          console.log("uid", uid)
         } else {
           console.log("user is logged out")
         }
@@ -53,7 +54,6 @@ function Home() {
         axiosBaseUrl.post(`/convo_history`, {uid: currentUser.uid})
         .then((response) =>{
             setConvoHistory(response.data)
-            console.log("response at Home.jsx")
         })
    }
    axiosBaseUrl.post(`/jobs_in_progress`, {uid: currentUser.uid})
@@ -68,8 +68,40 @@ function Home() {
         }, 2000);
       }
    })
+
+
+  
      
 }, [])
+
+    useEffect(() => {
+        // Initialize the WebSocket connection
+        const websocketBaseUrl = import.meta.env.VITE_WEBSOCKET_URL
+        const ws = new WebSocket(`${websocketBaseUrl}/${currentUser.uid}`);
+        // const ws = new WebSocket(`ws://localhost:8000/ws/${currentUser.uid}`);
+        // Define the event handler for incoming messages
+        ws.onmessage = (event) => {
+            const message = event.data;
+            console.log("MESSAGE FROM WEBSOCKET:::: ", message);
+            // Handle the message (e.g., display a notification in the UI)
+            setJobCompleteNotification(message);
+        };
+
+        axiosBaseUrl.post(`/job_notifications`, {uid: currentUser.uid})
+            .then((response) => {
+                if(response.data.length > 0) {
+                    setJobCompleteNotification(response.data)
+                }
+            })
+        // Return a cleanup function that closes the WebSocket connection
+        // This function is called when the component unmounts or before the effect runs again
+        return () => {
+            ws.close();
+        };
+
+    }, [currentUser.uid]);
+
+
   const animation = keyframes `
   to {
      background-position: 200%;
@@ -84,6 +116,7 @@ function Home() {
       color="black"
       animation= {`${animation} 1s linear infinite`}
     >
+        <SuccessToast /> 
     <div style={{padding: '10px'}}>
       {isPrivacyMode ?
         <Flex direction="row" justifyContent="center" alignItems="center" >

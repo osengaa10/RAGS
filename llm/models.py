@@ -1,7 +1,6 @@
 from base import Base
 from sqlalchemy import Column, Integer, ARRAY, String, TIMESTAMP, Boolean, text, UniqueConstraint
 
-
 class Post(Base):
     __tablename__ = "posts"
 
@@ -42,3 +41,8 @@ class RunningPipelines(Base):
     uid = Column(String, primary_key=True)
     rag = Column(String, primary_key=True)
     # created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))
+
+class CompletedJobNotifications(Base):
+    __tablename__ = 'completed_job_notifications'
+    uid = Column(String, primary_key=True)
+    rag = Column(String, primary_key=True)

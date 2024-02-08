@@ -1,7 +1,7 @@
-from fastapi import BackgroundTasks, FastAPI, UploadFile, File, Form, Depends, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, UploadFile, File, Form, Depends, HTTPException, Query, WebSocket
 from fastapi.responses import JSONResponse, FileResponse
 from rag import *
-from chunk_and_embed import chunk_and_embed
+from chunk_and_embed import chunk_and_embed, connections, notify_user_of_completion, run_async_in_background
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -20,7 +20,6 @@ from starlette import status
 import schemas
 from pypdf import PdfReader, PdfWriter
 
-import router.posts
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -70,6 +69,26 @@ if not inspect(engine).has_table(models.UserRagConfigs.__tablename__):
 if not inspect(engine).has_table(models.PrivateUsers.__tablename__):
     models.UserRagConfigs.__table__.create(bind=engine)
 
+if not inspect(engine).has_table(models.CompletedJobNotifications.__tablename__):
+    models.CompletedJobNotifications.__table__.create(bind=engine)
+
+
+
+
+
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await websocket.accept()
+    connections[user_id] = websocket
+    print(f"connections::: {connections}")
+    try:
+        while True:
+            # Keep the connection alive
+            await websocket.receive_text()
+    except Exception as e:
+        # Handle disconnection
+        del connections[user_id]
 
 @prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
 def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
@@ -128,7 +147,37 @@ async def fetch_rag_configs(request_body: QueryRequest, db: Session = Depends(ge
         return [running_rag]  # Return the system_prompt value as a string
     else:
         return []
+    
+@prefix_router.post("/job_notifications") 
+async def fetch_rag_configs(request_body: QueryRequest, db: Session = Depends(get_db)):
+    uid = request_body.uid
+    running_rag_query = text("select rag FROM running_pipelines WHERE uid = :uid")
+    result = db.execute(running_rag_query, {'uid': uid})
+    running_rag_rows = result.fetchall()
+    notification_query = text("select * FROM completed_job_notifications WHERE uid = :uid")
+     # Check if a row was returned for running rag
+    print(f"INSIDE JOB_PROGRESS ELSE::: {running_rag_rows}")
+        # Since no running rag was found, check for completed job notifications
+    notification_query = text("SELECT rag FROM completed_job_notifications WHERE uid = :uid")
+    notification_result = db.execute(notification_query, {'uid': uid})
+    # notification_rows = notification_result.fetchall()
+    notification_rows = notification_result.fetchone()
 
+    print(f"::::notification_rows::: {notification_rows} ::::notification_rows:::")
+    # Check if any completed job notifications exist
+    if notification_rows:
+        # Delete the fetched notifications to avoid re-fetching them in future calls
+        delete_query = text("DELETE FROM completed_job_notifications WHERE uid = :uid")
+        db.execute(delete_query, {'uid': uid})
+        print("DELETED NOTIFICATION")
+        db.commit()  # Make sure to commit the transaction to apply the changes
+
+        return notification_rows[0]
+    else:
+        return []
+    
+ 
+    
 @prefix_router.post("/set_privacy_flag") 
 async def set_privacy_flag(request_body: Privacy, db: Session = Depends(get_db)):
     uid = request_body.user_id
@@ -160,7 +209,7 @@ def test_posts(request_body: Rag, db: Session = Depends(get_db)):
     rag_name = request_body.input_directory
 
     sql_query = text("DELETE FROM user_convos WHERE uid = :uid AND rag = :rag_name")
-    result = db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
+    db.execute(sql_query, {'uid': uid, 'rag_name': rag_name})
     db.commit()
 
     return JSONResponse(content={"message": "Convo history deleted"})
@@ -265,8 +314,8 @@ async def upload_to_vector_db(background_tasks: BackgroundTasks, files: List[Upl
         return {"message": "You already have a running pipeline."}
     else:
         print("3.......... chunk_and_embed starting")
-        # chunk_and_embed(user_id, input_directory, is_privacy)
-        background_tasks.add_task(chunk_and_embed, user_id, input_directory, is_privacy)
+        background_tasks.add_task(run_async_in_background, chunk_and_embed, user_id, input_directory, is_privacy)
+        # background_tasks.add_task(chunk_and_embed, user_id, input_directory, is_privacy)
         return {"message": "The data pipeline has begun and is running. You will be notified upon completion."}
 
 
