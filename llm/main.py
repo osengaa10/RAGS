@@ -93,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 @prefix_router.post('/convo_history', response_model=List[schemas.UserConvoHistoryBase])
 def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
     uid = request_body.uid
-    sql_query = text("SELECT rag,prompt,response,sources,system_prompt, created_at FROM user_convos WHERE uid = :uid")
+    sql_query = text("SELECT rag,prompt,response,sources,document_names, page_numbers,system_prompt, created_at FROM user_convos WHERE uid = :uid")
     result = db.execute(sql_query, {'uid': uid})
     posts = result.fetchall()
     formatted_posts = []
@@ -103,6 +103,8 @@ def test_posts(request_body: QueryRequest, db: Session = Depends(get_db)):
             "prompt": post.prompt,
             "response": post.response,
             "sources": post.sources,
+            "page_numbers": post.page_numbers,
+            "document_names": post.document_names,
             "system_prompt": post.system_prompt,
             "created_at": post.created_at.isoformat() if post.created_at else None
         }

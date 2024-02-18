@@ -72,7 +72,7 @@ const Header = (props) => {
         // Step 3: Transform into the desired format
         const convo = sortedRag.flatMap(item => [
             { text: item.prompt, sender: 'user' },
-            { text: item.response, sender: 'llm', sources: item.sources, system_prompt: item.system_prompt }
+            { text: item.response, sender: 'llm', sources: item.sources, system_prompt: item.system_prompt, page_numbers: item.page_numbers, document_names: item.document_names }
         ]);
         axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: vectorDB})
           .then((response) => {

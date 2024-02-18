@@ -52,6 +52,8 @@ const Chat = () => {
   const [answer, setAnswer] = useState(null)
   const [loading, setLoading] = useState(false)
   const [sources, setSources] = useState([])
+  const [pageNumbers, setPageNumbers] = useState([])
+  const [sourceDocNames, setSourceDocNames] = useState([])
   const { isOpen, onOpen, onClose, onToggle } = useDisclosure();
   const btnRef = useRef();
   const messagesEndRef = useRef(null);
@@ -86,7 +88,12 @@ const Chat = () => {
             setLoading(false)
             setSources(response.data.sources)
             const sauces = (response.data.sources).map(sauce => sauce.page_content)
-            setMessages([...messages, { text: prompt, sender: 'user', system_prompt: systemPrompt}, { text: response.data.answer, sender: 'llm', sources: sauces}]);
+            const pageNumbers = (response.data.sources).map(sauce => sauce.metadata.page)
+            const documentNames = (response.data.sources).map(sauce => sauce.metadata.source.match(/[^/]*$/))
+
+            setMessages([...messages, 
+                { text: prompt, sender: 'user', system_prompt: systemPrompt}, 
+                { text: response.data.answer, sender: 'llm', sources: sauces, page_numbers: pageNumbers, document_names: documentNames}]);
             if(!isPrivacyMode) {
                 axiosBaseUrl.post(`/archive_message`, 
                 {
@@ -95,6 +102,8 @@ const Chat = () => {
                     prompt: prompt, 
                     response: response.data.answer, 
                     sources: sauces,
+                    document_names: documentNames,
+                    page_numbers: pageNumbers,
                     system_prompt: systemPrompt
                 })
                 .then((res) => {
@@ -188,14 +197,17 @@ const Chat = () => {
                         Sources
                         </Box>
                         <AccordionIcon />
-                    </AccordionButton>
-                    
+                    </AccordionButton>            
                     {
                         message.sources && message.sources.length > 0 ?
-                        message.sources.map(sauce =>
-                            <AccordionPanel textAlign='left' pb={4}>
-                                {sauce}
-                            </AccordionPanel>
+                        message.sources.map((sauce, index) => // Use the index to access corresponding elements
+                        <AccordionPanel key={index} textAlign='left' pb={4}>
+                            <b>Document Name:</b> {message.document_names && message.document_names[index]}
+                            <br />
+                            <b>Page Number: </b>{message.page_numbers && message.page_numbers[index]}
+                            <br />
+                           <b> Source:</b> {sauce}
+                        </AccordionPanel>
                         ) : <AccordionPanel>No sources available</AccordionPanel>
                     }
                     </AccordionItem>

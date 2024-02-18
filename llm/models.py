@@ -20,6 +20,8 @@ class UserConvos(Base):
     prompt = Column(String,nullable=False)
     response = Column(String,nullable=False)
     sources = Column(ARRAY(String),nullable=False)
+    page_numbers = Column(ARRAY(String),nullable=True)
+    document_names = Column(ARRAY(String),nullable=True)
     system_prompt = Column(String,nullable=False)
     published = Column(Boolean, server_default='TRUE')
     created_at = Column(TIMESTAMP(timezone='UTC'), server_default=text('now()'))

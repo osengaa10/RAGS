@@ -19,6 +19,8 @@ class UserConvosBase(BaseModel):
     rag: str
     prompt: str
     sources: list
+    page_numbers: list
+    document_names: list
     response: str
     system_prompt: str
 
@@ -35,6 +37,8 @@ class UserConvoHistoryBase(BaseModel):
     rag: str
     prompt: str
     sources: list
+    page_numbers: list
+    document_names: list
     response: str
     system_prompt: str
     created_at: str
