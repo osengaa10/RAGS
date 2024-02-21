@@ -18,3 +18,5 @@ llm/.env*
 ui/src/assets/sun.jpeg
 ui/src/assets/ven0aaa2.tif
 ui/src/components/SolarSystem.jsx
+ui/.env.production
+ui/.env*

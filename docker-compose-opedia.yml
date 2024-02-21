@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: intergalactictrash/rags-frontend
+    build: ./ui
+    # ports:
+    #   - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    image: intergalactictrash/rags-backend
+    build: ./llm
+    volumes:
+      - /home/austin/rag_data:/app/rag_data
+    depends_on:
+      - db
+    env_file:
+      - ./llm/.env.production
+    networks:
+      - app-network
+
+  db:
+    container_name: db
+    image: bitnami/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+    networks:
+      - app-network
+    environment:
+      POSTGRES_DB: rags
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+    volumes:
+      - /etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /etc/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - /etc/nginx/sites-available:/etc/nginx/sites-available
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  postgresql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+
