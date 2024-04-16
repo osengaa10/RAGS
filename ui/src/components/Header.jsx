@@ -13,7 +13,7 @@ import {Flex} from '@chakra-ui/react'
 const { SubMenu, ItemGroup } = Menu;
 
 const Header = (props) => {
-    const [current, setCurrent] = useState('h');
+    // const [current, setCurrent] = useState('h');
     const [isItemGroupCollapsed, setIsItemGroupCollapsed] = useState(false);
 
     const [visible, setVisible] = useState(false);
@@ -38,12 +38,14 @@ const Header = (props) => {
         convoHistory,
         setIsMobile,
         isMobile,
-        runningRags
+        runningRags,
+        current,
+        setCurrent
     } = useAuthValue();
 
-    const onClick = (e) => {
-        console.log('click ', e);
-        setCurrent(e.key);
+    const onClick = (key) => {
+        console.log('click ', key);
+        setCurrent(key);
     };
 
     const handleLogout = () => {
@@ -118,7 +120,7 @@ const Header = (props) => {
 
     const renderDesktopMenu = () => (
         <Menu onClick={onClick} selectedKeys={[current]} mode={isMobile ? "vertical" : "horizontal"} theme="light">
-            <SubMenu key="h" icon={<MessageOutlined />} title={<Link to="/" onClick={onClose}>Chat</Link>}>
+            <SubMenu key="h" icon={<MessageOutlined />} title={<Link to="/" onClick={(e) => { e.preventDefault(); onClick('h'); }}>Chat</Link>}>
             {runningRags.map((vDB) => (
                         <Menu.Item key={vDB} disabled>
                             <Spin size="small"/> &nbsp;

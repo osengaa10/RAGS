@@ -13,6 +13,7 @@ export function AuthProvider({children, value}) {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [runningRags, setRunningRags] = useState([]);
     const [jobCompleteNotification, setJobCompleteNotification] = useState('')
+    const [current, setCurrent] = useState('h');
 
     const contextValue = {
     ...value,
@@ -33,7 +34,9 @@ export function AuthProvider({children, value}) {
     runningRags,
     setRunningRags,
     jobCompleteNotification,
-    setJobCompleteNotification
+    setJobCompleteNotification,
+    current,
+    setCurrent
     };
 
     return (

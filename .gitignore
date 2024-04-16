@@ -20,3 +20,4 @@ ui/src/assets/ven0aaa2.tif
 ui/src/components/SolarSystem.jsx
 ui/.env.production
 ui/.env*
+settings.json

@@ -71,9 +71,10 @@ function CustomUpload() {
     vectorDBList,
     setVectorDBList,
     systemPrompt,
-    setSystemPrompt
+    setSystemPrompt,
+    setVectorDB,
+    vectorDB
    } = useAuthValue()
-
    const [revertSystemPrompt, setRevertSystemPrompt] = useState(systemPrompt);
 
   const options = vectorDBList.map((item, index) => {
@@ -88,6 +89,12 @@ function CustomUpload() {
   useEffect(() => {
     fetchDatabases()
   },[])
+
+  useEffect(() => {
+    // if (vectorDB != '') {
+        fetchRagConfigs(vectorDB)
+    // }
+  },[vectorDB]);
 
   const handleBlur = () => {
     if (systemPrompt.trim() === '') {
@@ -170,26 +177,45 @@ function CustomUpload() {
       })
    }
 
-  const onSelect = (data,option) => {
+   const fetchRagConfigs = (rag) => {
+        console.log("fetching for vectorDB: ", rag)
+       axiosBaseUrl.post(`/rag_configs`, { user_id: currentUser.uid, input_directory: rag })
+           .then((response) => {
+               setSystemPrompt(response.data)
+               setRevertSystemPrompt(response.data)
+           })
+       axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${rag}`)
+           .then((response) => {
+               setSourceFiles(response.data);
+               console.log(`sourceFiles::: ${response.data}`)
+           })
+   }
+
+  const onSelect = (data, option) => {
+    // console.log("option::: ", option)
     setSelectedOption(option);
     setRagName(option.label)
     setSearchedValue(option.label);
-    axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
-      .then((response) => {
-        setSystemPrompt(response.data)
-        setRevertSystemPrompt(response.data)
-      })
-    axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${option.label}`)
-      .then((response) => {
-        setSourceFiles(response.data);
-        console.log(`sourceFiles::: ${response.data}`)
-      })
+    // axiosBaseUrl.post(`/rag_configs`, {user_id: currentUser.uid, input_directory: option.label})
+    //   .then((response) => {
+    //     setSystemPrompt(response.data)
+    //     setRevertSystemPrompt(response.data)
+    //   })
+    // axiosBaseUrl.get(`/sourcefiles/${currentUser.uid}/${option.label}`)
+    //   .then((response) => {
+    //     setSourceFiles(response.data);
+    //     console.log(`sourceFiles::: ${response.data}`)
+    //   })
+    fetchRagConfigs(option.label)
+    setVectorDB(option.label)  
+    console.log("data onSelect:: ", data)
   };
 
   const onChange = (data, option) => {
     setSearchedValue(data);
     setRagName(data)
     setSelectedOption(option);
+    console.log("data in onChange: ", data)
     setSystemPrompt('')
     setSourceFiles([])
   };
